@@ -28,11 +28,42 @@ std::unique_ptr<Module> buildModule()
 
 	/* String constant */
 	Value *helloWorldStr = Builder.CreateGlobalStringPtr("hello world!");
-	Value *formatStr = Builder.CreateGlobalStringPtr("%d\n");
+	Value *formatStr = Builder.CreateGlobalStringPtr("%d \n");
+
 	Type* intType = Builder.getInt32Ty();
 	Value *var = Builder.CreateAlloca(intType);
-	Value *cst = ConstantInt::get(TheContext, APInt(32, 999));
+	Value *cst = ConstantInt::get(TheContext, APInt(32, 1));
+	Value *cst888 = ConstantInt::get(TheContext, APInt(32, 888));
 	Builder.CreateStore(cst, var);
+
+	Value *arraysize = ConstantInt::get(TheContext, APInt(32, 200));
+	Type* testtype = ArrayType::get(Builder.getInt32Ty(), 100)-> getPointerTo();
+	Value* arraypointer = Builder.CreateAlloca(testtype);
+	
+	Value *array = Builder.CreateAlloca(ArrayType::get(Builder.getInt32Ty(), 100), arraysize);
+	ArrayRef<Value*> ref = {ConstantInt::get(Type::getInt64Ty(TheContext), 0), ConstantInt::get(Type::getInt64Ty(TheContext), 100)};
+	ArrayRef<Value*> ref1 = {ConstantInt::get(Type::getInt64Ty(TheContext), 1)};
+	ArrayRef<Value*> ref0 = {ConstantInt::get(Type::getInt64Ty(TheContext), 0), ConstantInt::get(Type::getInt64Ty(TheContext), 0)};
+	Builder.CreateStore(Builder.CreateLoad(var), Builder.CreateInBoundsGEP(array, ref, "ass100"));
+	Builder.CreateStore(cst888, Builder.CreateInBoundsGEP(array, ref0, "ass0"));
+	
+	Builder.CreateStore(array, arraypointer);
+	Constant* const1 = ConstantInt::get(Type::getInt32Ty(TheContext), 1);
+	Value* loadap = Builder.CreateLoad(arraypointer);
+	Value* afterap = Builder.CreateInBoundsGEP(loadap, ref1, "move");
+	Builder.CreateStore(afterap, arraypointer);
+	// Value* addresult = Builder.CreateAdd(Builder.CreateLoad(arraypointer), const1);
+	// Builder.CreateStore(Builder.CreateLoad(addresult), arraypointer);
+	// Value *pvar = Builder.CreateAlloca(intType->getPointerTo());
+
+	// Builder.CreateStore(array, pvar);
+	// Builder.CreateStore(var, pvar);
+	// Value *ppvar = Builder.CreateAlloca(intType);
+	// Builder.CreateStore(pvar, ppvar);
+
+	// Value *vpvar = Builder.CreateLoad(ppvar);
+	// Value *vvar = Builder.CreateLoad(vpvar);
+
 
 	/* Create "puts" function */
 	std::vector<Type *> putsArgs;
@@ -54,7 +85,7 @@ std::unique_ptr<Module> buildModule()
 	/* Invoke it */
 	std::vector<Value*> argv;
 	argv.push_back(formatStr);
-	argv.push_back(Builder.CreateLoad(var));
+	argv.push_back(Builder.CreateLoad(Builder.CreateInBoundsGEP(Builder.CreateLoad(arraypointer), ref0)));
 	Builder.CreateCall(printfFunc, argv);
 
 	/* Return zero */
