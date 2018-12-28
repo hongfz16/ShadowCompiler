@@ -35,7 +35,7 @@ using std::endl;
 using llvm::BasicBock;
 using llvm::Value;
 using llvm::Function;
-
+using llvm::ArrayType;
 
 typedef std::map<string, scVariable*> msv;
 typedef std::map<string, scVariable*>::iterator msvi;

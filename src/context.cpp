@@ -108,5 +108,5 @@ Function* scContext::seekFunction(string &name) {
             return rtn;
     }
     return rtn;
-
 }
+

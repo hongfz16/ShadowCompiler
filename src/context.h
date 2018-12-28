@@ -81,7 +81,7 @@ public:
     Function* setFunction(string&, Function*, scType*, vt&);
     scBlock* getCurrentBlock();
     void setCurrentReturnValue(Value*, scType*);
-
+    Type* number2sctype(int number);
 };
 
 #endif //SRC_CONTEXT_H
