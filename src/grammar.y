@@ -16,9 +16,9 @@
 	scNDeclaration* declaration;
 	scNExpression* expression;
 	scNNumber* number;
-	scNDeclBody* decl_body;
+	scNDeclarationBody* decl_body;
 	scNType* type;
-	scNParamList* param_list;
+	scNParams* param_list;
 	scNExpressions* expressions;
 
 	std::string* string;
@@ -101,21 +101,21 @@ type    : TYINT { $$ = $1; }
 decl_body : TLPAREN decl_body TRPAREN { $$ = $2; }
 		| TMUL decl_body { $$ = new scNDeclarationBody();
 						   $$->name = $1->name;
-						   $$->isarray = false;
-						   $$->isptr = true;
+						   $$->is_array = false;
+						   $$->is_ptr = true;
 						   $$->size = 1;
 						   $$->psize = $2->size;
 						   $$->children = shared_ptr<scNDeclarationBody>($2); }
 		| decl_body TLBRACKET number TRBRACKET { $$ = new scNDeclarationBody();
 												 $$->name = $1->name;
-												 $$->isarray = true;
-												 $$->isptr = false;
+												 $$->is_array = true;
+												 $$->is_ptr = false;
 												 $$->size = $1->size * int(number->value);
 												 $$->children = shared_ptr<scNDeclarationBody>($1); }
 		| identifier { $$ = new scNDeclarationBody();
 					   $$->name = $1->name;
-					   $$->isarry = false;
-					   $$->isptr = false;
+					   $$->is_array = false;
+					   $$->is_ptr = false;
 					   $$->size = 1;
 					   $$->children = nullptr; }
 		;

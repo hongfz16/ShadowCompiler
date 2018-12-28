@@ -343,7 +343,7 @@ public:
     {
         this->print_depth(depth);
         cout<<this->class_name;
-        cout<<print_depth(depth+1);
+        this->print_depth(depth+1);
         this->dec_body->print_debug(depth+1);
     }
 };
@@ -497,7 +497,7 @@ public:
 	string value;
 public:
 	scNString(string value):value(value) {
-        class_name = "scNString"
+        class_name = "scNString";
     }
 	~scNString() {}
 
@@ -535,7 +535,7 @@ public:
 	scNNumber() {
         class_name = "scNNumber";
     }
-	~scNNunmber() {}
+	~scNNumber() {}
 
 	virtual llvm::Value* code_generate(scContext& context) {}
 };
@@ -557,7 +557,7 @@ public:
 	}
 
 	llvm::Value* code_generate(scContext& context) {}
-}
+};
 
 class scNDouble64Number: public scNExpression {
 public:
@@ -576,7 +576,7 @@ public:
 	}
 
 	llvm::Value* code_generate(scContext& context) {}
-}
+};
 
 class scNAssignment: public scNExpression {
 public:
@@ -599,7 +599,7 @@ public:
 	}
 
 	llvm::Value* code_generate(scContext& context) {}
-}
+};
 
 class scNBinaryExpression: public scNExpression {
 public:
@@ -627,7 +627,7 @@ public:
 	}
 
 	llvm::Value* code_generate(scContext& context) {}
-}
+};
 
 class scNUnaryExpression: public scNExpression {
 public:
@@ -649,7 +649,7 @@ public:
 	}
 
 	llvm::Value* code_generate(scContext& context) {}
-}
+};
 
 class scNReferenceExpression: public scNExpression {
 public:
@@ -670,7 +670,7 @@ public:
 	}
 
 	llvm::Value* code_generate(scContext& context) {}
-}
+};
 
 class scNDereferenceExpression: public scNExpression {
 public:
@@ -691,7 +691,7 @@ public:
 	}
 
 	llvm::Value* code_generate(scContext& context) {}
-}
+};
 
 
-#endif _AST_HPP_
+#endif //_AST_HPP_
