@@ -35,4 +35,11 @@
 
 .DS_Store
 
+.idea
+cmake-build-debug
+*.ll
 
+
+grammar.cpp
+grammar.hpp
+token.cpp

@@ -7,13 +7,13 @@ OBJS = grammar.o       \
 		otherContext.o \
 		TypeSystem.o   \
 
-LLVMCONFIG = llvm-config
+LLVMCONFIG = llvm-config-7
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++11
 LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/usr/local/lib -ljsoncpp
 LIBS = `$(LLVMCONFIG) --libs`
 
 clean:
-	$(RM) -rf grammar.cpp grammar.hpp tokens.cpp main $(OBJS)
+	$(RM) -rf grammar.cpp grammar.hpp token.cpp main $(OBJS)
 
 main.cpp: AST.hpp otherContext.h TypeSystem.h#context.hpp
 
