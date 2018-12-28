@@ -31,6 +31,8 @@
 *.out
 *.app
 
+*.ll
+
 .DS_Store
 
 .idea
