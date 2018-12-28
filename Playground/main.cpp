@@ -31,7 +31,7 @@ std::unique_ptr<Module> buildModule()
 	Value *formatStr = Builder.CreateGlobalStringPtr("%d\n");
 	Type* intType = Builder.getInt32Ty();
 	Value *var = Builder.CreateAlloca(intType);
-	Value *cst = ConstantInt::get(TheContext, APInt(32, 999));
+	Value *cst = ConstantInt::get(TheContext, APInt(32, 1));
 	Builder.CreateStore(cst, var);
 
 	/* Create "puts" function */
@@ -48,8 +48,31 @@ std::unique_ptr<Module> buildModule()
 	FunctionType *printfType = FunctionType::get(Builder.getInt32Ty(), printfargsRef, true);
 	Constant *printfFunc = module->getOrInsertFunction("printf", printfType);
 
+	Value* condValue = Builder.CreateIntCast(Builder.CreateLoad(var), Type::getInt1Ty(TheContext), true);
+	Value* cond_val = Builder.CreateICmpNE(condValue, ConstantInt::get(Type::getInt1Ty(TheContext), 0, true));
+
+	Value* right_str = Builder.CreateGlobalStringPtr("you r right");
+	Value* wrong_str = Builder.CreateGlobalStringPtr("you r wrong");
+	Function* parent_func = Builder.GetInsertBlock()->getParent();
+	BasicBlock* true_bb = BasicBlock::Create(TheContext, "when true", parent_func);
+	BasicBlock* false_bb = BasicBlock::Create(TheContext, "when false", parent_func);
+	BasicBlock* merge_bb = BasicBlock::Create(TheContext, "after if", parent_func);
+	Builder.CreateCondBr(cond_val, true_bb, false_bb);
+
+	Builder.SetInsertPoint(true_bb);
+	Builder.CreateCall(putsFunc, right_str);
+	Builder.CreateBr(merge_bb);
+
+	Builder.SetInsertPoint(false_bb);
+	Builder.CreateCall(putsFunc, wrong_str);
+	Builder.CreateBr(merge_bb);
+
+	Builder.SetInsertPoint(merge_bb);
+
+	
+
 	/* Invoke it */
-	Builder.CreateCall(putsFunc, helloWorldStr);
+	// Builder.CreateCall(putsFunc, helloWorldStr);
 
 	/* Invoke it */
 	std::vector<Value*> argv;
