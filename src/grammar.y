@@ -1,5 +1,5 @@
 %{
-	#include ""
+	#include "AST.hpp"
 	#include <stdio.h>
 	#include <string>
 	scNStatements* TopBlock;

@@ -13,7 +13,7 @@ LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/us
 LIBS = `$(LLVMCONFIG) --libs`
 
 clean:
-	$(RM) -rf grammar.cpp grammar.hpp tokens.cpp main $(OBJS)
+	$(RM) -rf grammar.cpp grammar.hpp token.cpp main $(OBJS)
 
 main.cpp: AST.hpp context.h
 
@@ -36,3 +36,6 @@ token.cpp: token.l grammar.hpp
 
 main: $(OBJS)
 	g++ $(CPPFLAGS) -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
+
+run: main
+	./main < test.code

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "context.h"
 
 using std::string;
 using std::vector;
