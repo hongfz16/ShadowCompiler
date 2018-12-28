@@ -39,6 +39,7 @@
 cmake-build-debug
 *.ll
 
+main
 
 grammar.cpp
 grammar.hpp
