@@ -59,7 +59,10 @@ class scNNode
 public:
     string class_name;
 public:
-    scNNode():class_name("scNNode"){}
+    scNNode()
+    {
+        this->class_name = "scNNode";
+    }
     void print_debug(int depth)
     {
         cout<<this->class_name<<endl;
@@ -78,7 +81,10 @@ public:
     int type;
     int count;
 public:
-    scNType(int type):type(type), class_name("scNType"){}
+    scNType(int type):type(type)
+    {
+        class_name = "scNType";
+    }
     Value* code_generate(scContext& context){}
     void print_debug(int depth)
     {
@@ -92,7 +98,10 @@ public:
 class scNStatement : public scNNode
 {
 public:
-    scNStatement():class_name("scNStatement"){}
+    scNStatement()
+    {
+        class_name = "scNStatement";
+    }
     virtual Value* code_generate(scContext& context);
 };
 
@@ -106,7 +115,10 @@ public:
     string name;
     shared_ptr<scNDeclarationBody> children;
 public:
-    scNDeclarationBody(){}
+    scNDeclarationBody()
+    {
+        class_name = "scNDeclarationBody";
+    }
     Value* code_generate(scContext& context){}
     void print_debug(int depth)
     {
@@ -126,7 +138,10 @@ public:
 class scNDeclaration : public scNStatement
 {
 public:
-    scNDeclaration() : class_name("scNDeclaration"){}
+    scNDeclaration()
+    {
+        class_name = "scNDeclaration";
+    }
     virtual Value* code_generate(scContext& context);
 };
 
@@ -135,7 +150,10 @@ class scNStatements : public scNStatement
 public:
     vector<shared_ptr<scNStatement>> statement_list;
 public:
-    scNStatements(){}
+    scNStatements()
+    {
+        class_name = "scNStatements";
+    }
     Value* code_generate(scContext& context){}
 
     void print_debug(int depth)
@@ -152,7 +170,10 @@ public:
 class scNEmptyStatement : public scNStatement
 {
 public:
-    scNEmptyStatement(){}
+    scNEmptyStatement()
+    {
+        class_name = "scNEmptyStatement";
+    }
     Value* code_generate(scContext& context){}
     void print_debug(int depth)
     {
@@ -167,7 +188,10 @@ public:
     shared_ptr<scNStatements> statements;
 
 public:
-    scNBlock(){}
+    scNBlock()
+    {
+        class_name = "scNBlock";
+    }
 
     Value* code_generate(scContext& context){}
     void print_debug(int depth)
