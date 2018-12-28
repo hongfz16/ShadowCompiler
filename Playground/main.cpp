@@ -28,11 +28,42 @@ std::unique_ptr<Module> buildModule()
 
 	/* String constant */
 	Value *helloWorldStr = Builder.CreateGlobalStringPtr("hello world!");
-	Value *formatStr = Builder.CreateGlobalStringPtr("%d\n");
+	Value *formatStr = Builder.CreateGlobalStringPtr("%d \n");
+
 	Type* intType = Builder.getInt32Ty();
 	Value *var = Builder.CreateAlloca(intType);
 	Value *cst = ConstantInt::get(TheContext, APInt(32, 1));
+	Value *cst888 = ConstantInt::get(TheContext, APInt(32, 888));
 	Builder.CreateStore(cst, var);
+
+	Value *arraysize = ConstantInt::get(TheContext, APInt(32, 200));
+	Type* testtype = ArrayType::get(Builder.getInt32Ty(), 100)-> getPointerTo();
+	Value* arraypointer = Builder.CreateAlloca(testtype);
+	
+	Value *array = Builder.CreateAlloca(ArrayType::get(Builder.getInt32Ty(), 100), arraysize);
+	ArrayRef<Value*> ref = {ConstantInt::get(Type::getInt64Ty(TheContext), 0), ConstantInt::get(Type::getInt64Ty(TheContext), 100)};
+	ArrayRef<Value*> ref1 = {ConstantInt::get(Type::getInt64Ty(TheContext), 1)};
+	ArrayRef<Value*> ref0 = {ConstantInt::get(Type::getInt64Ty(TheContext), 0), ConstantInt::get(Type::getInt64Ty(TheContext), 0)};
+	Builder.CreateStore(Builder.CreateLoad(var), Builder.CreateInBoundsGEP(array, ref, "ass100"));
+	Builder.CreateStore(cst888, Builder.CreateInBoundsGEP(array, ref0, "ass0"));
+	
+	Builder.CreateStore(array, arraypointer);
+	Constant* const1 = ConstantInt::get(Type::getInt32Ty(TheContext), 1);
+	Value* loadap = Builder.CreateLoad(arraypointer);
+	Value* afterap = Builder.CreateInBoundsGEP(loadap, ref1, "move");
+	Builder.CreateStore(afterap, arraypointer);
+	// Value* addresult = Builder.CreateAdd(Builder.CreateLoad(arraypointer), const1);
+	// Builder.CreateStore(Builder.CreateLoad(addresult), arraypointer);
+	// Value *pvar = Builder.CreateAlloca(intType->getPointerTo());
+
+	// Builder.CreateStore(array, pvar);
+	// Builder.CreateStore(var, pvar);
+	// Value *ppvar = Builder.CreateAlloca(intType);
+	// Builder.CreateStore(pvar, ppvar);
+
+	// Value *vpvar = Builder.CreateLoad(ppvar);
+	// Value *vvar = Builder.CreateLoad(vpvar);
+
 
 	/* Create "puts" function */
 	std::vector<Type *> putsArgs;
@@ -48,26 +79,27 @@ std::unique_ptr<Module> buildModule()
 	FunctionType *printfType = FunctionType::get(Builder.getInt32Ty(), printfargsRef, true);
 	Constant *printfFunc = module->getOrInsertFunction("printf", printfType);
 
-	Value* condValue = Builder.CreateIntCast(Builder.CreateLoad(var), Type::getInt1Ty(TheContext), true);
-	Value* cond_val = Builder.CreateICmpNE(condValue, ConstantInt::get(Type::getInt1Ty(TheContext), 0, true));
+	// if test
 
-	Value* right_str = Builder.CreateGlobalStringPtr("you r right");
-	Value* wrong_str = Builder.CreateGlobalStringPtr("you r wrong");
-	Function* parent_func = Builder.GetInsertBlock()->getParent();
-	BasicBlock* true_bb = BasicBlock::Create(TheContext, "when true", parent_func);
-	BasicBlock* false_bb = BasicBlock::Create(TheContext, "when false", parent_func);
-	BasicBlock* merge_bb = BasicBlock::Create(TheContext, "after if", parent_func);
-	Builder.CreateCondBr(cond_val, true_bb, false_bb);
+	// Value* condValue = Builder.CreateIntCast(Builder.CreateLoad(var), Type::getInt1Ty(TheContext), true);
+	// Value* cond_val = Builder.CreateICmpNE(condValue, ConstantInt::get(Type::getInt1Ty(TheContext), 0, true));
+	// Value* right_str = Builder.CreateGlobalStringPtr("you r right");
+	// Value* wrong_str = Builder.CreateGlobalStringPtr("you r wrong");
+	// Function* parent_func = Builder.GetInsertBlock()->getParent();
+	// BasicBlock* true_bb = BasicBlock::Create(TheContext, "when true", parent_func);
+	// BasicBlock* false_bb = BasicBlock::Create(TheContext, "when false", parent_func);
+	// BasicBlock* merge_bb = BasicBlock::Create(TheContext, "after if", parent_func);
+	// Builder.CreateCondBr(cond_val, true_bb, false_bb);
 
-	Builder.SetInsertPoint(true_bb);
-	Builder.CreateCall(putsFunc, right_str);
-	Builder.CreateBr(merge_bb);
+	// Builder.SetInsertPoint(true_bb);
+	// Builder.CreateCall(putsFunc, right_str);
+	// Builder.CreateBr(merge_bb);
 
-	Builder.SetInsertPoint(false_bb);
-	Builder.CreateCall(putsFunc, wrong_str);
-	Builder.CreateBr(merge_bb);
+	// Builder.SetInsertPoint(false_bb);
+	// Builder.CreateCall(putsFunc, wrong_str);
+	// Builder.CreateBr(merge_bb);
 
-	Builder.SetInsertPoint(merge_bb);
+	// Builder.SetInsertPoint(merge_bb);
 
 	
 
@@ -77,7 +109,7 @@ std::unique_ptr<Module> buildModule()
 	/* Invoke it */
 	std::vector<Value*> argv;
 	argv.push_back(formatStr);
-	argv.push_back(Builder.CreateLoad(var));
+	argv.push_back(Builder.CreateLoad(Builder.CreateInBoundsGEP(Builder.CreateLoad(arraypointer), ref0)));
 	Builder.CreateCall(printfFunc, argv);
 
 	/* Return zero */
