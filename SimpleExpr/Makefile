@@ -13,7 +13,7 @@ LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/us
 LIBS = `$(LLVMCONFIG) --libs`
 
 clean:
-	$(RM) -rf grammar.cpp grammar.hpp tokens.cpp main $(OBJS)
+	$(RM) -rf grammar.cpp grammar.hpp token.cpp main $(OBJS)
 
 main.cpp: AST.hpp otherContext.h TypeSystem.h#context.hpp
 
