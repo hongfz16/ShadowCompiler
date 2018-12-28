@@ -57,7 +57,7 @@
 "<<"                    puts("TSHIFTL"); return TOKEN(TSHIFTL);
 ";"                     puts("TSEMICOLON"); return TOKEN(TSEMICOLON);
 "!"                     puts("TEXCLAMATION"); return TOKEN(TEXCLAMATION);
-"~".                    puts("TWAVY"); return TOKEN(TWAVY);
+"~"                     puts("TWAVY"); return TOKEN(TWAVY);
 .						printf("Unknown token:%s\n", yytext); yyterminate();
 
 %%

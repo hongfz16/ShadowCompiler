@@ -28,20 +28,20 @@
 %token <string> TIDENTIFIER TINTEGER TDOUBLE TYINT TYDOUBLE TYFLOAT TYCHAR TYBOOL TYVOID TYSTRING TEXTERN TSTRING TCHAR
 %token <token> TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL TEXCLAMATION
 %token <token> TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT TSEMICOLON TLBRACKET TRBRACKET TQUOTATION
-%token <token> TPLUS TMINUS TMUL TDIV TAND TOR TXOR TMOD TNEG TNOT TSHIFTL TSHIFTR
+%token <token> TPLUS TMINUS TMUL TDIV TAND TOR TXOR TMOD TNEG TNOT TSHIFTL TSHIFTR TWAVY
 %token <token> TIF TELSE TFOR TWHILE TRETURN TSTRUCT
 
 
-%token <statements> statements program
-%token <statement> statement block if_statement if_else_statement while_statement for_statement return_statement fdefinition empty_statement
-%token <declaration> declaration variable_decl function_decl
-%token <expression> expression unary_expression binary_expression reference_expression dereference_expression array_expression function_call assignment identifier
-%token <number> number
-%token <decl_body> decl_body
-%token <type> super_type
-%token <param_list> param_list
-%token <expressions> expressions
-%token <int> bop uop type
+%type <statements> statements program
+%type <statement> statement block if_statement if_else_statement while_statement for_statement return_statement fdefinition empty_statement
+%type <declaration> declaration variable_decl function_decl
+%type <expression> expression unary_expression binary_expression reference_expression dereference_expression array_expression function_call assignment identifier
+%type <number> number
+%type <decl_body> decl_body
+%type <type> super_type
+%type <param_list> param_list
+%type <expressions> expressions
+%type <int> bop uop type
 
 
 %left TPLUS TMINUS
@@ -106,7 +106,7 @@ decl_body : TLPAREN decl_body TRPAREN { $$ = $2; }
 						   $$->size = 1;
 						   $$->psize = $2->size;
 						   $$->children = shared_ptr<scNDeclarationBody>($2); }
-		| decl_body TLBRACKET number TRPRACKET { $$ = new scNDeclarationBody();
+		| decl_body TLBRACKET number TRBRACKET { $$ = new scNDeclarationBody();
 												 $$->name = $1->name;
 												 $$->isarray = true;
 												 $$->isptr = false;

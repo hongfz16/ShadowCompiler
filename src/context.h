@@ -47,7 +47,7 @@ public:
 class scBlock {
 public:
     BasicBlock* block;
-    scValue* returnValue;
+    scVariable* returnValue;
     msv VSymboltable;
     msf FSymboltable;
 

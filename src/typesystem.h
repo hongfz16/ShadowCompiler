@@ -29,7 +29,7 @@ class TypeSystem {
 
 class scType {
     Type* type;
-    name name;
+    string name;
     scType(Type*);
     void setName(string&);
 //    scType(Type)

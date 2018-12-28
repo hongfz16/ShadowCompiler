@@ -17,7 +17,7 @@
 #include <memory>
 #include <string>
 #include <map>
-#include "grammar.hpp"
+// #include "grammar.hpp"
 
 #define pub(a) push_back(a)
 #define pob(a) pop_back(a)
@@ -27,15 +27,23 @@
 class scVariable;
 class scType;
 class scBlock;
+class scFunction;
 
 using std::string;
 using std::vector;
 using std::cout;
 using std::endl;
-using llvm::BasicBock;
+using std::map;
+using std::pair;
+using std::unique_ptr;
+using llvm::BasicBlock;
 using llvm::Value;
 using llvm::Function;
 using llvm::ArrayType;
+using llvm::Type;
+using llvm::LLVMContext;
+using llvm::IRBuilder;
+using llvm::Module;
 
 typedef std::map<string, scVariable*> msv;
 typedef std::map<string, scVariable*>::iterator msvi;
