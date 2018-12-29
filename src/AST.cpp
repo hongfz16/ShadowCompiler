@@ -390,7 +390,7 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 }
 
 llvm::Value* scNString::code_generate(scContext& context) {
-    return context.builder.CreateGlobalStringPtr(this->value);
+    return context.builder.CreateGlobalStringPtr(this->value, this->value);
 }
 
 llvm::Value* scNBlock::code_generate(scContext &context) {
