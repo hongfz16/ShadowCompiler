@@ -369,9 +369,10 @@ public:
 	bool is_assignable;
 	shared_ptr<scType> type;
 public:
-	scNExpression(): class_name("scNExpression"),
-					 is_assignable(false),
-					 type(nullptr) {}
+	scNExpression(): is_assignable(false),
+					 type(nullptr) {
+                        class_name = "scNExpression";
+                     }
 	~scNExpression() {}
 
 	void print_debug(int depth) {
@@ -386,8 +387,9 @@ class scNIdentifier: public scNExpression {
 public:
 	string name;
 public:
-	scNIdentifier(string name): class_name("scNIdentifier"),
-							   name(name) {}
+	scNIdentifier(string name):name(name) {
+        class_name = "scNIdentifier";
+    }
 	~scNIdentifier() {}
 	
 	void print_debug(int depth) {
@@ -406,9 +408,10 @@ public:
 	shared_ptr<scNExpressions> expressions;
 public:
 	scNFunctionCall(string name, shared_ptr<scNExpressions> expressions):
-					class_name("scNFunctionCall"),
 					f_name(name),
-					expressions(expressions) {}
+					expressions(expressions) {
+                        class_name = "scNFunctionCall";
+                    }
 	~scNFunctionCall() {}
 	
 	void print_debug(int depth) {
@@ -426,7 +429,9 @@ class scNExpressions: public scNExpression {
 public:
 	vector<shared_ptr<scNExpression> > expression_list;
 public:
-	scNExpressions(): class_name("scNExpressions") {}
+	scNExpressions() {
+        class_name = "scNExpressions";
+    }
 	~scNExpressions() {}
 	
 	void print_debug(int depth) {
@@ -447,9 +452,10 @@ public:
 public:
 	scNArrayExpression(shared_ptr<scNExpression> target_expression, 
 					   shared_ptr<scNExpression> index_expression):
-					   class_name("scNArrayExpression"),
 					   target_expression(target_expression),
-					   index_expression(index_expression) {}
+					   index_expression(index_expression) {
+                          class_name = "scNArrayExpression";
+                       }
 	~scNArrayExpression() {}
 	
 	void print_debug(int depth) {
@@ -466,8 +472,9 @@ class scNString: public scNExpression {
 public:
 	string value;
 public:
-	scNString(string value): class_name("scNString"),
-							value(value) {}
+	scNString(string value):value(value) {
+        class_name = "scNString"
+    }
 	~scNString() {}
 
 	void print_debug(int depth) {
@@ -484,8 +491,9 @@ class scNChar: public scNExpression {
 public:
 	string value;
 public:
-	scNChar(string value): class_name("scNChar"),
-						   value(value) {}
+	scNChar(string value):value(value) {
+        class_name = "scNChar";
+    }
 	~scNChar() {}
 
 	void print_debug(int depth) {
@@ -500,7 +508,9 @@ public:
 
 class scNNumber: public scNExpression {
 public:
-	scNNumber(): class_name("scNNumber") {}
+	scNNumber() {
+        class_name = "scNNumber";
+    }
 	~scNNunmber() {}
 
 	virtual llvm::Value* code_generate(scContext& context) {}
@@ -510,8 +520,9 @@ class scNInt32Number: public scNExpression {
 public:
 	int value;
 public:
-	scNInt32Number(int value): class_name("scNInt32Number"),
-							   value(value) {}
+	scNInt32Number(int value):value(value) {
+        class_name = "scNInt32Number";
+    }
 	~scNInt32Number() {}
 
 	void print_debug(int depth) {
@@ -528,8 +539,9 @@ class scNDouble64Number: public scNExpression {
 public:
 	double value;
 public:
-	scNDouble64Number(double value): class_name("scNDouble64Number"),
-									 value(value) {}
+	scNDouble64Number(double value): value(value) {
+        class_name = "scNDouble64Number";
+    }
 	~scNDouble64Number() {}
 
 	void print_debug(int depth) {
@@ -550,7 +562,9 @@ public:
 	scNAssignment(shared_ptr<scNExpression> left_expression,
 				  shared_ptr<scNExpression> right_expression):
 				  left_expression(left_expression),
-				  right_expression(right_expression) {}
+				  right_expression(right_expression) {
+                      class_name = "scNAssignment";
+                  }
 	~scNAssignment() {}
 
 	void print_debug(int depth) {
@@ -574,7 +588,9 @@ public:
 						int b_op): 
 						left_expression(left_expression),
 						right_expression(right_expression),
-						b_op(b_op) {}
+						b_op(b_op) {
+                            class_name = "scNBinaryExpression";
+                        }
 	~scNBinaryExpression() {}
 
 	void print_debug(int depth) {
@@ -595,7 +611,9 @@ public:
 	int u_op;
 public:
 	scNUnaryExpression(shared_ptr<scNExpression> expression, int u_op):
-					  expression(expression), u_op(u_op) {}
+					  expression(expression), u_op(u_op) {
+                          class_name="scNUnaryExpression";
+                      }
 	~scNUnaryExpression() {}
 
 	void print_debug(int depth) {
@@ -614,7 +632,9 @@ public:
 	shared_ptr<scNExpression> expression;
 public:
 	scNReferenceExpression(shared_ptr<scNExpression> expression):
-						   expression(expression) {}
+						   expression(expression) {
+                               class_name="scNReferenceExpression";
+                           }
 	~scNReferenceExpression() {}
 
 	void print_debug(int depth) {
@@ -633,7 +653,9 @@ public:
 	shared_ptr<scNExpression> expression;
 public:
 	scNDereferenceExpression(shared_ptr<scNExpression> expression):
-							 expression(expression) {}
+							 expression(expression) {
+                                class_name="scNDereferenceExpression";
+                             }
 	~scNDereferenceExpression() {}
 
 	void print_debug(int depth) {
