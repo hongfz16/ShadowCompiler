@@ -168,11 +168,12 @@ class scNBlock : public scNStatement
 {
 public:
     shared_ptr<scNStatements> statements;
-
+	Function* par_func;
 public:
     scNBlock()
     {
         class_name = "scNBlock";
+		parent_function = nullptr;
     }
 
     Value* code_generate(scContext& context){}
