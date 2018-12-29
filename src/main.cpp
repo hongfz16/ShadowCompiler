@@ -1,16 +1,28 @@
 #include "AST.hpp"
 #include "context.h"
 #include <iostream>
+#include <fstream>
+
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/Function.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/Support/raw_os_ostream.h"
 
 using namespace std;
 
 extern int yyparse();
 extern scNStatements* TopBlock;
 
-void writeModuleToFile(Module *module, string filename)
+void writeModuleToFile(llvm::Module* module, string filename)
 {
 	std::ofstream std_file_stream(filename);
-	raw_os_ostream file_stream(std_file_stream);
+	llvm::raw_os_ostream file_stream(std_file_stream);
 	module->print(file_stream, nullptr);
 }
 
@@ -21,6 +33,6 @@ int main() {
 	scContext context;
 	TopBlock->code_generate(context);
 	string filename = "out.ll";
-	writeModuleToFile(context.llvmModule, filename);
+	writeModuleToFile(context.llvmModule.get(), filename);
 	return 0;
 }

@@ -148,7 +148,7 @@ public:
     {
         class_name = "scNStatements";
     }
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
     void print_debug(int depth);
 };
@@ -168,7 +168,7 @@ class scNBlock : public scNStatement
 {
 public:
     shared_ptr<scNStatements> statements;
-	Function* par_func;
+	Function* parent_function;
 public:
     scNBlock()
     {
@@ -176,7 +176,7 @@ public:
 		parent_function = nullptr;
     }
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
     void print_debug(int depth);
 };
 
@@ -264,7 +264,7 @@ public:
     scNFunctionDefinition(shared_ptr<scNFunctionDeclaration> dec, shared_ptr<scNBlock> blk)
     : func_declaration(dec), block(blk){class_name = "scNFunctionDefinition";}
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
     void print_debug(int depth);
 };
@@ -379,7 +379,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNChar: public scNExpression {

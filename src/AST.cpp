@@ -382,7 +382,7 @@ llvm::Value* scNStatements::code_generate(scContext& context) {
 }
 
 llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
-    llvm::Function* func = this->func_declaration->code_generate(context);
+    llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
     this->block->parent_function = func;
     this->block->code_generate(context);

@@ -1,9 +1,5 @@
-int main()
-{
-	int *a;
-	int **b;
-	int *c[10];
-	int (*d)[10];
-	int (**e)[10];
-	int (*e[10])[10];
+extern int puts(char* c);
+
+int main() {
+	puts("hello shadow compiler");
 }
