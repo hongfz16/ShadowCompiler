@@ -36,7 +36,13 @@ string& TypeSystem::type2str(scType* type) {
     return type->name;
 }
 
-CastInst::CastOps TypeSystem::getCast(scType *src, scType *tar) {
-    it = castTable.find(mp(src, tar));
-    return it == castTable.end()? nullptr: (*it);
+CastInst::CastOps* TypeSystem::getCast(scType *src, scType *tar) {
+    auto it = castTable.find(mp(src, tar));
+    if(it == castTable.end()) {
+        return nullptr;
+    } else {
+        CastInst::CastOps castop = it->second;
+        return &castop;
+    }
+    // return it == castTable.end()? nullptr: &(*it);
 }

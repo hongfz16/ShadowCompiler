@@ -1,9 +1,9 @@
 %{
 #include <stdio.h>
 #include <string>
-
+#include "AST.hpp"
 #include "grammar.hpp"
-#define SAVE_TOKEN yylval.string = new string(yytext)
+#define SAVE_TOKEN yylval.string = new std::string(yytext)
 #define TOKEN(t) ( yylval.token = t)
 %}
 
@@ -19,11 +19,11 @@
 "for"                   puts("TFOR"); return TOKEN(TFOR);
 "while"                 puts("TWHILE"); return TOKEN(TWHILE);
 "struct"                puts("TSTRUCT"); return TOKEN(TSTRUCT);
-"int"                   SAVE_TOKEN; puts("TYINT");  return TYINT;
-"double"                SAVE_TOKEN; puts("TYDOUBLE"); return TYDOUBLE;
-"float"                 SAVE_TOKEN; puts("TYFLOAT"); return TYFLOAT;
-"char"                  SAVE_TOKEN; puts("TYCHAR"); return TYCHAR;
-"void"                  SAVE_TOKEN; puts("TYVOID"); return TYVOID;
+"int"                   puts("TYINT");  return TOKEN(TYINT);
+"double"                puts("TYDOUBLE"); return TOKEN(TYDOUBLE);
+"float"                 puts("TYFLOAT"); return TOKEN(TYFLOAT);
+"char"                  puts("TYCHAR"); return TOKEN(TYCHAR);
+"void"                  puts("TYVOID"); return TOKEN(TYVOID);
 "extern"                SAVE_TOKEN; puts("TEXTERN"); return TEXTERN;
 [a-zA-Z_][a-zA-Z0-9_]*	SAVE_TOKEN; puts("TIDENTIFIER"); return TIDENTIFIER;
 [0-9]+\.[0-9]*			SAVE_TOKEN; puts("TDOUBLE"); return TDOUBLE;
@@ -58,6 +58,8 @@
 ";"                     puts("TSEMICOLON"); return TOKEN(TSEMICOLON);
 "!"                     puts("TEXCLAMATION"); return TOKEN(TEXCLAMATION);
 "~"                     puts("TWAVY"); return TOKEN(TWAVY);
+"&&"                    puts("TANDAND"); return TOKEN(TANDAND);
+"||"                    puts("TOROR"); return TOKEN(TOROR);
 .						printf("Unknown token:%s\n", yytext); yyterminate();
 
 %%

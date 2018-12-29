@@ -28,13 +28,13 @@ scBlock::~scBlock()
 Value* scBlock::seekIdentifier(string& name)
 {
     msvi it = VSymboltable.find(name);
-    return it == VSymboltable.end()? nullptr: it->second.value;
+    return it == VSymboltable.end()? nullptr: it->second->value;
 }
 
 Function* scBlock::seekFunction(string& name)
 {
-    msfi = FSymboltable.find(name);
-    return it == FSymboltable.end()? nullptr: it->second.function;
+    msfi it = FSymboltable.find(name);
+    return it == FSymboltable.end()? nullptr: it->second->function;
 }
 
 Value* scBlock::setIdentifier(string &name, Value *value, scType *sctype) {
@@ -51,7 +51,7 @@ Function* scBlock::setFunction(string &name, Function *function, scType* ttype, 
     return function;
 }
 
-scContext::scContext(): builder(llvmContext), TypeSystem(llvmContext) {
+scContext::scContext(): builder(llvmContext), typeSystem(llvmContext) {
     llvmModule = unique_ptr<Module> (new Module("main", llvmContext));
 }
 
@@ -73,14 +73,14 @@ void scContext::popBlock() {
 }
 
 void scContext::setCurrentReturnValue(Value* value, scType *type) {
-    rtnval = (blocks.back())->returnValue;
+    scVariable* rtn = (blocks.back())->returnValue;
     if(rtn != nullptr) {
         delete rtn;
     }
     (blocks.back())->returnValue = new scVariable(value, type);
 }
 
-void scContext::getCurrentBlock() {
+scBlock* scContext::getCurrentBlock() {
     return blocks.size()? blocks.back(): nullptr;
 }
 
@@ -88,7 +88,7 @@ Function* scContext::setFunction(string &name, Function *function, scType *rtnty
     return blocks.back()->setFunction(name, function, rtntype, tvt);
 }
 
-Value* scContext::setIdentifier(string &name, Value *value, Type *type) {
+Value* scContext::setIdentifier(string &name, Value *value, scType *type) {
     return blocks.back()->setIdentifier(name, value, type);
 }
 

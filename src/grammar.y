@@ -14,34 +14,41 @@
 	scNStatements* statements;
 	scNStatement* statement;
 	scNDeclaration* declaration;
+	scNVariableDeclaration* var_decl;
+	scNFunctionDeclaration* func_decl;
 	scNExpression* expression;
 	scNNumber* number;
 	scNDeclarationBody* decl_body;
 	scNType* type;
 	scNParams* param_list;
 	scNExpressions* expressions;
+	scNIdentifier* identifier;
+	scNBlock* block;
 
 	std::string* string;
 	int token;
 }
 
-%token <string> TIDENTIFIER TINTEGER TDOUBLE TYINT TYDOUBLE TYFLOAT TYCHAR TYBOOL TYVOID TYSTRING TEXTERN TSTRING TCHAR
+%token <string> TIDENTIFIER TINTEGER TDOUBLE TYSTRING TEXTERN TSTRING TCHAR
 %token <token> TCEQ TCNE TCLT TCLE TCGT TCGE TEQUAL TEXCLAMATION
-%token <token> TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT TSEMICOLON TLBRACKET TRBRACKET TQUOTATION
-%token <token> TPLUS TMINUS TMUL TDIV TAND TOR TXOR TMOD TNEG TNOT TSHIFTL TSHIFTR TWAVY
+%token <token> TLPAREN TRPAREN TLBRACE TRBRACE TCOMMA TDOT TSEMICOLON TLBRACKET TRBRACKET TQUOTATION TYINT TYDOUBLE TYFLOAT TYCHAR TYBOOL TYVOID
+%token <token> TPLUS TMINUS TMUL TDIV TAND TOR TXOR TMOD TNEG TNOT TSHIFTL TSHIFTR TWAVY TANDAND TOROR
 %token <token> TIF TELSE TFOR TWHILE TRETURN TSTRUCT
 
 
 %type <statements> statements program
-%type <statement> statement block if_statement if_else_statement while_statement for_statement return_statement fdefinition empty_statement
-%type <declaration> declaration variable_decl function_decl
-%type <expression> expression unary_expression binary_expression reference_expression dereference_expression array_expression function_call assignment identifier
+%type <statement> statement if_statement if_else_statement while_statement for_statement return_statement fdefinition empty_statement
+%type <var_decl> variable_decl
+%type <func_decl> function_decl
+%type <expression> expression unary_expression binary_expression reference_expression dereference_expression array_expression function_call assignment
+%type <block> block
+%type <identifier> identifier
 %type <number> number
 %type <decl_body> decl_body
 %type <type> super_type
 %type <param_list> param_list
 %type <expressions> expressions
-%type <int> bop uop type
+%type <token> bop uop type
 
 
 %left TPLUS TMINUS
@@ -58,7 +65,8 @@ statements : statement { $$ = new scNStatements();
 		| statements statement { $1->statement_list.push_back(shared_ptr<scNStatement>($2)); }
 		;
 
-statement : declaration TSEMICOLON { $$ = $1; }
+statement : variable_decl TSEMICOLON { $$ = $1; }
+		| function_decl TSEMICOLON { $$ = $1; }
 		| expression TSEMICOLON { $$ = $1; }
 		| block { $$ = $1; }
 		| if_statement { $$ = $1; }
@@ -84,10 +92,6 @@ expression : number { $$ = $1; }
 		| TCHAR { $$ = new scNChar(*($1)); }
 		;
 
-declaration : variable_decl { $$ = $1; }
-		| function_decl { $$ = $1; }
-		;
-
 variable_decl : type decl_body { $$ = new scNVariableDeclaration($1, shared_ptr<scNDeclarationBody>($2));}
 		;
 
@@ -100,17 +104,17 @@ type    : TYINT { $$ = $1; }
 
 decl_body : TLPAREN decl_body TRPAREN { $$ = $2; }
 		| TMUL decl_body { $$ = new scNDeclarationBody();
-						   $$->name = $1->name;
+						   $$->name = $2->name;
 						   $$->is_array = false;
 						   $$->is_ptr = true;
 						   $$->size = 1;
-						   $$->psize = $2->size;
+						   $$->p_size = $2->size;
 						   $$->children = shared_ptr<scNDeclarationBody>($2); }
-		| decl_body TLBRACKET number TRBRACKET { $$ = new scNDeclarationBody();
+		| decl_body TLBRACKET TINTEGER TRBRACKET { $$ = new scNDeclarationBody();
 												 $$->name = $1->name;
 												 $$->is_array = true;
 												 $$->is_ptr = false;
-												 $$->size = $1->size * int(number->value);
+												 $$->size = $1->size * atol($3->c_str());
 												 $$->children = shared_ptr<scNDeclarationBody>($1); }
 		| identifier { $$ = new scNDeclarationBody();
 					   $$->name = $1->name;
@@ -120,8 +124,10 @@ decl_body : TLPAREN decl_body TRPAREN { $$ = $2; }
 					   $$->children = nullptr; }
 		;
 
-function_decl : super_type TIDENTIFIER TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>($1), *($2), shared_ptr<scNParams>($4)); }
-		| TEXTERN super_type TIDENTIFIER TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>($1), *($2), shared_ptr<scNParams>($4)); }
+function_decl : type decl_body TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($1)), ($2->name), shared_ptr<scNParams>($4)); }
+		| type decl_body TLPAREN TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($1)), ($2->name), shared_ptr<scNParams>(new scNParams())); }
+		| TEXTERN type decl_body TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($2)), ($3->name), shared_ptr<scNParams>($5)); }
+		| TEXTERN type decl_body TLPAREN TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($2)), ($3->name), shared_ptr<scNParams>(new scNParams())); }
 		;
 
 super_type : type { $$ = new scNType($1); }
@@ -136,7 +142,7 @@ param_list : variable_decl { $$ = new scNParams();
 		;
 
 block : TLBRACE TRBRACE { $$ = new scNBlock(); }
-		| TLBRACE statements TLBRACE { $$->statements = shared_ptr<scNStatements>($2); }
+		| TLBRACE statements TRBRACE { $$ = new scNBlock(); $$->statements = shared_ptr<scNStatements>($2); }
 		;
 
 if_statement : TIF TLPAREN expression TRPAREN statement { $$ = new scNIfStatement(shared_ptr<scNExpression>($3), shared_ptr<scNStatement>($5)); }
@@ -152,6 +158,7 @@ for_statement : TFOR TLPAREN expression TSEMICOLON expression TSEMICOLON express
 		;
 
 return_statement : TRETURN expression { $$ = new scNReturnStatement(shared_ptr<scNExpression>($2)); }
+		| TRETURN { $$ = new scNReturnStatement(nullptr); }
 		;
 
 fdefinition : function_decl block { $$ = new scNFunctionDefinition(shared_ptr<scNFunctionDeclaration>($1), shared_ptr<scNBlock>($2)); }
@@ -171,6 +178,7 @@ identifier : TIDENTIFIER { $$ = new scNIdentifier(*($1)); }
 		;
 
 function_call : identifier TLPAREN expressions TRPAREN { $$ = new scNFunctionCall($1->name, shared_ptr<scNExpressions>($3)); }
+		| identifier TLPAREN TRPAREN { $$ = new scNFunctionCall($1->name, shared_ptr<scNExpressions>(new scNExpressions())); }
 		;
 
 expressions : expression { $$ = new scNExpressions();
@@ -198,6 +206,8 @@ bop 	: TCEQ { $$ = $1; }
 		| TMOD { $$ = $1; }
 		| TSHIFTR { $$ = $1; }
 		| TSHIFTL { $$ = $1; }
+		| TANDAND { $$ = $1; }
+		| TOROR { $$ = $1; }
 		;
 
 unary_expression : uop expression { $$ = new scNUnaryExpression(shared_ptr<scNExpression>($2), $1); }

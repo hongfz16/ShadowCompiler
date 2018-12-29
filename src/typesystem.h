@@ -14,6 +14,7 @@ typedef map<ptt, CastInst::CastOps> CastTable;
 
 
 class TypeSystem {
+public:
     LLVMContext& llvmContext;
     vt types;
     CastTable castTable;
@@ -23,11 +24,12 @@ class TypeSystem {
     scType* getType(Type*);
     void setTypeName(scType*, string&);
     void addCast(scType*, scType*, CastInst::CastOps);
-    CastInst::CastOps getCast(scType*, scType*);
+    CastInst::CastOps* getCast(scType*, scType*);
     string& type2str(scType*);
 };
 
 class scType {
+public:
     Type* type;
     string name;
     scType(Type*);

@@ -63,16 +63,10 @@ public:
     {
         this->class_name = "scNNode";
     }
-    void print_debug(int depth)
-    {
-        cout<<this->class_name<<endl;
-    }
-    static void print_depth(int depth)
-    {
-        for(int i=0; i<depth; i++)
-            cout<<"--";
-    }
-    virtual Value* code_generate(scContext& context);
+    ~scNNode() {}
+    virtual void print_debug(int depth) = 0;
+    static void print_depth(int depth);
+    virtual Value* code_generate(scContext& context) = 0;
 };
 
 class scNType : public scNNode
@@ -86,13 +80,7 @@ public:
         class_name = "scNType";
     }
     Value* code_generate(scContext& context){}
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name<<endl;
-        this->print_depth(depth+1);
-        cout<<this->type<<endl<<this->count<<endl;
-    }
+    void print_debug(int depth);
 };
 
 class scNStatement : public scNNode
@@ -102,7 +90,24 @@ public:
     {
         class_name = "scNStatement";
     }
-    virtual Value* code_generate(scContext& context);
+    virtual Value* code_generate(scContext& context) = 0;
+    virtual void print_debug(int depth) = 0;
+};
+
+class scNExpression: public scNStatement {
+public:
+    bool is_assignable;
+    shared_ptr<scType> type;
+public:
+    scNExpression(): is_assignable(false),
+                     type(nullptr) {
+                        class_name = "scNExpression";
+                     }
+    ~scNExpression() {}
+
+    virtual void print_debug(int depth) = 0;
+
+    virtual llvm::Value* code_generate(scContext& context) {}
 };
 
 class scNDeclarationBody : public scNNode
@@ -120,19 +125,7 @@ public:
         class_name = "scNDeclarationBody";
     }
     Value* code_generate(scContext& context){}
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->print_depth(depth+1);
-        cout<<this->is_array<<endl
-        <<this->is_ptr<<endl
-        <<this->size<<endl
-        <<this->p_size<<endl
-        <<this->name<<endl;
-
-        this->children->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 class scNDeclaration : public scNStatement
@@ -142,7 +135,7 @@ public:
     {
         class_name = "scNDeclaration";
     }
-    virtual Value* code_generate(scContext& context);
+    virtual Value* code_generate(scContext& context) = 0;
 };
 
 class scNStatements : public scNStatement
@@ -156,15 +149,7 @@ public:
     }
     Value* code_generate(scContext& context){}
 
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name<<endl;
-        for(auto it = this->statement_list.begin(); it != this->statement_list.end(); it++)
-        {
-            (*it)->print_debug(depth+1);
-        }
-    }
+    void print_debug(int depth);
 };
 
 class scNEmptyStatement : public scNStatement
@@ -175,11 +160,7 @@ public:
         class_name = "scNEmptyStatement";
     }
     Value* code_generate(scContext& context){}
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-    }
+    void print_debug(int depth);
 };
 
 class scNBlock : public scNStatement
@@ -194,12 +175,7 @@ public:
     }
 
     Value* code_generate(scContext& context){}
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        statements->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 class scNIfStatement : public scNStatement
@@ -213,13 +189,7 @@ public:
     : expression(ex), statement(st){}
 
     Value* code_generate(scContext& context){}
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->expression->print_debug(depth+1);
-        this->statement->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 class scNIfElseStatement : public scNStatement
@@ -235,14 +205,7 @@ public:
 
     Value* code_generate(scContext& context){}
 
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->expression->print_debug(depth+1);
-        this->if_statement->print_debug(depth+1);
-        this->else_statement->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 class scNForStatement : public scNStatement
@@ -258,16 +221,7 @@ public:
 
     Value* code_generate(scContext& context){}
 
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-
-        this->init_expression->print_debug(depth+1);
-        this->cond_expression->print_debug(depth+1);
-        this->update_expression->print_debug(depth+1);
-        this->statement->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 class scNWhileStatement : public scNStatement
@@ -281,13 +235,22 @@ public:
 
     Value* code_generate(scContext& context){}
 
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->expression->print_debug(depth+1);
-        this->statement->print_debug(depth+1);
-    }
+    void print_debug(int depth);
+};
+
+class scNFunctionDeclaration : public scNDeclaration
+{
+public:
+    shared_ptr<scNType> type;
+    string func_name;
+    shared_ptr<scNParams> param_list;
+public:
+    scNFunctionDeclaration(shared_ptr<scNType> type, string func_name, shared_ptr<scNParams> param_list)
+    : type(type), func_name(func_name), param_list(param_list) {class_name = "scNFunctionDeclaration";}
+
+    Value* code_generate(scContext& context){}
+
+    void print_debug(int depth);
 };
 
 class scNFunctionDefinition : public scNStatement
@@ -301,13 +264,7 @@ public:
 
     Value* code_generate(scContext& context){}
 
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->func_declaration->print_debug(depth+1);
-        this->block->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 class scNReturnStatement : public scNStatement
@@ -319,12 +276,7 @@ public:
     : expression(ex){class_name = "scNReturnStatement";}
     Value* code_generate(scContext& context){}
 
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->expression->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 
@@ -337,37 +289,9 @@ public:
     scNVariableDeclaration(int type, shared_ptr<scNDeclarationBody> body) 
     : type(type), dec_body(body) {class_name = "scNVariableDeclaration";}
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->print_depth(depth+1);
-        this->dec_body->print_debug(depth+1);
-    }
-};
-
-class scNFunctionDeclaration : public scNDeclaration
-{
-public:
-    shared_ptr<scNType> type;
-    shared_ptr<scNFunctionIdentifier> func_name;
-    shared_ptr<scNParams> param_list;
-public:
-    scNFunctionDeclaration(shared_ptr<scNType> type, string func_name, shared_ptr<scNParams> param_list)
-    : type(type), func_name(func_name), param_list(param_list) {class_name = "scNFunctionDeclaration";}
-
-    Value* code_generate(scContext& context){}
-
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        this->type->print_debug(depth+1);
-        this->func_name->print_debug(depth+1);
-        this->param_list->print_debug(depth+1);
-    }
+    void print_debug(int depth);
 };
 
 class scNParams : public scNNode
@@ -377,34 +301,7 @@ public:
 public:
     scNParams(){class_name = "scNParams";}
     Value* code_generate(scContext& context){}
-    void print_debug(int depth)
-    {
-        this->print_depth(depth);
-        cout<<this->class_name;
-        for(auto it=this->param_list.begin(); it != this->param_list.end(); it++)
-        {
-            (*it)->print_debug(depth+1);
-        }
-    }
-};
-
-class scNExpression: public scNStatement {
-public:
-	bool is_assignable;
-	shared_ptr<scType> type;
-public:
-	scNExpression(): is_assignable(false),
-					 type(nullptr) {
-                        class_name = "scNExpression";
-                     }
-	~scNExpression() {}
-
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-	}
-
-	virtual llvm::Value* code_generate(scContext& context) {}
+    void print_debug(int depth);
 };
 
 class scNIdentifier: public scNExpression {
@@ -416,12 +313,7 @@ public:
     }
 	~scNIdentifier() {}
 	
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<this->name<<endl;
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -438,13 +330,7 @@ public:
                     }
 	~scNFunctionCall() {}
 	
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<this->f_name<<endl;
-		this->expressions->print_debug(depth+1);
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -458,13 +344,7 @@ public:
     }
 	~scNExpressions() {}
 	
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		for(auto it = expression_list.begin(); it!=expression_list.end(); ++it) {
-			(*it)->print_debug(depth+1);
-		}
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -482,12 +362,7 @@ public:
                        }
 	~scNArrayExpression() {}
 	
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		target_expression->print_debug(depth+1);
-		index_expression->print_debug(depth+1);
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -501,12 +376,7 @@ public:
     }
 	~scNString() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<this->value<<endl;
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -520,12 +390,7 @@ public:
     }
 	~scNChar() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<this->value<<endl;
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -540,7 +405,7 @@ public:
 	virtual llvm::Value* code_generate(scContext& context) {}
 };
 
-class scNInt32Number: public scNExpression {
+class scNInt32Number: public scNNumber {
 public:
 	int value;
 public:
@@ -549,17 +414,12 @@ public:
     }
 	~scNInt32Number() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<this->value<<endl;
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
 
-class scNDouble64Number: public scNExpression {
+class scNDouble64Number: public scNNumber {
 public:
 	double value;
 public:
@@ -568,12 +428,7 @@ public:
     }
 	~scNDouble64Number() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<this->value<<endl;
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -591,12 +446,7 @@ public:
                   }
 	~scNAssignment() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		left_expression->print_debug(depth+1);
-		right_expression->print_debug(depth+1);
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -617,14 +467,7 @@ public:
                         }
 	~scNBinaryExpression() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		left_expression->print_debug(depth+1);
-		this->print_depth(depth+1);
-		cout<<this->b_op<<endl;
-		right_expression->print_debug(depth+1);
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -640,13 +483,7 @@ public:
                       }
 	~scNUnaryExpression() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<this->u_op<<endl;
-		expression->print_debug(depth+1);
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -661,13 +498,7 @@ public:
                            }
 	~scNReferenceExpression() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<"&"<<endl;
-		expression->print_debug(depth+1);
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };
@@ -682,13 +513,7 @@ public:
                              }
 	~scNDereferenceExpression() {}
 
-	void print_debug(int depth) {
-		this->print_depth(depth);
-		cout<<this->class_name<<endl;
-		this->print_depth(depth+1);
-		cout<<"*"<<endl;
-		expression->print_debug(depth+1);
-	}
+	void print_debug(int depth);
 
 	llvm::Value* code_generate(scContext& context) {}
 };

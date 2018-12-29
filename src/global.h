@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <iostream>
 // #include "grammar.hpp"
 
 #define pub(a) push_back(a)
@@ -36,6 +37,7 @@ using std::endl;
 using std::map;
 using std::pair;
 using std::unique_ptr;
+using std::make_pair;
 using llvm::BasicBlock;
 using llvm::Value;
 using llvm::Function;
