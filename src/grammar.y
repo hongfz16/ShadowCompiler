@@ -124,10 +124,10 @@ decl_body : TLPAREN decl_body TRPAREN { $$ = $2; }
 					   $$->children = nullptr; }
 		;
 
-function_decl : type decl_body TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($1)), ($2->name), shared_ptr<scNParams>($4)); }
-		| type decl_body TLPAREN TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($1)), ($2->name), shared_ptr<scNParams>(new scNParams())); }
-		| TEXTERN type decl_body TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($2)), ($3->name), shared_ptr<scNParams>($5)); }
-		| TEXTERN type decl_body TLPAREN TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($2)), ($3->name), shared_ptr<scNParams>(new scNParams())); }
+function_decl : type decl_body TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($1)), shared_ptr<scNDeclarationBody>($2), shared_ptr<scNParams>($4)); }
+		| type decl_body TLPAREN TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($1)), shared_ptr<scNDeclarationBody>($2), shared_ptr<scNParams>(new scNParams())); }
+		| TEXTERN type decl_body TLPAREN param_list TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($2)), shared_ptr<scNDeclarationBody>($3), shared_ptr<scNParams>($5)); }
+		| TEXTERN type decl_body TLPAREN TRPAREN { $$ = new scNFunctionDeclaration(shared_ptr<scNType>(new scNType($2)), shared_ptr<scNDeclarationBody>($3), shared_ptr<scNParams>(new scNParams())); }
 		;
 
 super_type : type { $$ = new scNType($1); }

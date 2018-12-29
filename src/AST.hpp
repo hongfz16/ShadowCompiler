@@ -242,13 +242,13 @@ class scNFunctionDeclaration : public scNDeclaration
 {
 public:
     shared_ptr<scNType> type;
-    string func_name;
+    shared_ptr<scNDeclarationBody> dec_body;
     shared_ptr<scNParams> param_list;
 public:
-    scNFunctionDeclaration(shared_ptr<scNType> type, string func_name, shared_ptr<scNParams> param_list)
-    : type(type), func_name(func_name), param_list(param_list) {class_name = "scNFunctionDeclaration";}
+    scNFunctionDeclaration(shared_ptr<scNType> type, shared_ptr<scNDeclarationBody> dec_body, shared_ptr<scNParams> param_list)
+    : type(type), dec_body(dec_body), param_list(param_list) {class_name = "scNFunctionDeclaration";}
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
     void print_debug(int depth);
 };
