@@ -207,7 +207,7 @@ public:
 
 public:
     scNIfElseStatement(shared_ptr<scNExpression> ex, shared_ptr<scNStatement> i_st, shared_ptr<scNStatement> e_st)
-    : expression(ex), if_statement(i_st), else_statement(e_st){}
+    : expression(ex), if_statement(i_st), else_statement(e_st){class_name = "scNifElseStatement";}
 
     Value* code_generate(scContext& context){}
 
@@ -230,7 +230,7 @@ public:
     shared_ptr<scNStatement> statement;
 public:
     scNForStatement(shared_ptr<scNExpression> i_ex, shared_ptr<scNExpression> c_ex, shared_ptr<scNExpression> u_ex, shared_ptr<scNStatement> st)
-    : init_expression(i_ex), cond_expression(c_ex), update_expression(u_ex), statement(st){}
+    : init_expression(i_ex), cond_expression(c_ex), update_expression(u_ex), statement(st){ class_name = "scNForStatement"; }
 
     Value* code_generate(scContext& context){}
 
@@ -253,7 +253,7 @@ public:
     shared_ptr<scNStatement> statement;
 public:
     scNWhileStatement(shared_ptr<scNExpression> ex, shared_ptr<scNStatement> st)
-    : expression(ex), statement(st){}
+    : expression(ex), statement(st){class_name = "scNWhileStatement";}
 
     Value* code_generate(scContext& context){}
 
@@ -273,7 +273,7 @@ public:
     shared_ptr<scNBlock> block;
 public:
     scNFunctionDefinition(shared_ptr<scNFunctionDeclaration> dec, shared_ptr<scNBlock> blk)
-    : func_declaration(dec), block(blk){}
+    : func_declaration(dec), block(blk){class_name = "scNFunctionDefinition";}
 
     Value* code_generate(scContext& context){}
 
@@ -292,7 +292,7 @@ public:
     shared_ptr<scNExpression> expression;
 public:
     scNReturnStatement(shared_ptr<scNExpression> ex)
-    : expression(ex){}
+    : expression(ex){class_name = "scNReturnStatement";}
     Value* code_generate(scContext& context){}
 
     void print_debug(int depth)
@@ -311,7 +311,7 @@ public:
     shared_ptr<scNDeclarationBody> dec_body;
 public:
     scNVariableDeclaration(int type, shared_ptr<scNDeclarationBody> body) 
-    : type(type), dec_body(body) {}
+    : type(type), dec_body(body) {class_name = "scNVariableDeclaration";}
 
     Value* code_generate(scContext& context){}
 
@@ -332,7 +332,7 @@ public:
     shared_ptr<scNParams> param_list;
 public:
     scNFunctionDeclaration(shared_ptr<scNType> type, string func_name, shared_ptr<scNParams> param_list)
-    : type(type), func_name(func_name), param_list(param_list) {}
+    : type(type), func_name(func_name), param_list(param_list) {class_name = "scNFunctionDeclaration";}
 
     Value* code_generate(scContext& context){}
 
@@ -351,7 +351,7 @@ class scNParams : public scNNode
 public:
     vector<shared_ptr<scNVariableDeclaration>> param_list;
 public:
-    scNParams(){}
+    scNParams(){class_name = "scNParams";}
     Value* code_generate(scContext& context){}
     void print_debug(int depth)
     {

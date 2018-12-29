@@ -3,7 +3,7 @@
 //
 
 #include "global.h"
-#include "context.h"
+#include .h"
 
 Value* scNVariableDeclaration::codeGen(scContext& context) {
     // get info
