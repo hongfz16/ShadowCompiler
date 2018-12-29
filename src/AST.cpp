@@ -41,6 +41,10 @@ void scNNode::print_depth(int depth)
             cout<<">>";
 }
 
+void scNNode::logerr(const string &err_info) {
+    cout << err_info << endl;
+}
+
 void scNType::print_debug(int depth)
 {
     this->print_depth(depth);
@@ -132,10 +136,11 @@ void scNFunctionDeclaration::print_debug(int depth)
 {
     this->print_depth(depth);
     cout<<this->class_name<<endl;
-    try_to_print((shared_ptr<scNNode>)this->type, depth);
+    this->print_depth(depth+1);
+    cout<<this->type<<endl;
     this->print_depth(depth+1);
     // cout<<func_name<<endl;
-    try_to_print((shared_ptr<scNNode>)this->decl_body, depth);
+    try_to_print((shared_ptr<scNNode>)this->dec_body, depth);
     try_to_print((shared_ptr<scNNode>)this->param_list, depth);
 }
 
@@ -269,34 +274,38 @@ void scNDereferenceExpression::print_debug(int depth) {
     try_to_print((shared_ptr<scNNode>)expression, depth);
 }
 
-scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize)
-{
+scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, int type, scContext& context, bool& isarray, int& arraysize, string& name) {
     // get info
     vector<shared_ptr<scNDeclarationBody> > lst;
 
-    for(shared_ptr<scNDeclarationBody> ptr = dec_body; ptr; ptr = ptr->children)
+    for(shared_ptr<scNDeclarationBody> ptr = head_ptr; ptr; ptr = ptr->children)
         lst.pub(ptr);
     auto it = lst.rbegin();
-    Type* type = context.number2type(this->type);
-    string varName = (*it)->name;
+    Type* llvm_type = context.number2type(type);
+    name = (*it)->name;
 
     isarray = false;
     arraysize = 1;
 //    bool isptr, isarray;
     for(++it; it != lst.rend(); ++it) {
         shared_ptr<scNDeclarationBody> ptr = *it;
-        isarray = ptr->is_array();
+        isarray = ptr->is_array;
         arraysize = ptr->size;
         if(ptr->is_ptr)
-            type = type->getPointerTo();
+            llvm_type = llvm_type->getPointerTo();
         else if(ptr->is_array)
-            type = ArrayType::get(type, ptr->size);
+            llvm_type = ArrayType::get(llvm_type, ptr->size);
     }
-    scType* sctype = context.typeSystem.getType(type);
+    scType* sctype = context.typeSystem.getscType(llvm_type);
     return sctype;
 }
 
-Value* scNVariableDeclaration::code_generate(scContext& context) {
+llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
+    bool isarray = false;
+    int arraysize = 1;
+    string varName;
+    scType* sctype = getTypeFromDeclarationBody(dec_body, this->type, context, isarray, arraysize, varName);
+    Type* type = context.typeSystem.getllvmType(sctype);
     //TODO: code gen
     Value* allocaInst = nullptr;
     if(isarray) {
@@ -305,6 +314,12 @@ Value* scNVariableDeclaration::code_generate(scContext& context) {
     else {
         allocaInst = context.builder.CreateAlloca(type);
     }
+    Value* rtnvalue = context.setIdentifier(varName, allocaInst, sctype);
+    if(rtnvalue == nullptr) {
+        logerr("duplicated variable name!");
+        exit(1);
+    }
+    return allocaInst;
 }
 
 llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
@@ -316,21 +331,21 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
     bool isarray;
     int arraysize;
     string name;
-    scType* return_sctype = getTypeFromDeclarationBody(dec_body, isarray, arraysize, name);
+    scType* return_sctype = getTypeFromDeclarationBody(dec_body, this->type, context, isarray, arraysize, name);
     //get param type
     std::vector<Type*> param_llvm_types;
     std::vector<scType*> param_sctypes;
     if(param_list!=nullptr) {
         for(auto it = param_list->param_list.begin(); it!=param_list->param_list.end(); ++it) {
-            scType* param_sctype = getTypeFromDeclarationBody(*it, isarray, arraysize, name);
-            param_llvm_types.push_back(param_sctype->getllvmType());
-            param_sctype.push_back(param_sctype);
+            scType* param_sctype = getTypeFromDeclarationBody((*it)->dec_body, (*it)->type, context, isarray, arraysize, name);
+            param_llvm_types.push_back(context.typeSystem.getllvmType(param_sctype));
+            param_sctypes.push_back(param_sctype);
         }
     }
-    ArrayRef<Type*> param_llvm_types_ref(param_llvm_types);
-    FunctionType *func_type = FunctionType::get(builder.getInt32Ty(), param_llvm_types_ref, false);
-    Function *func = Function::Create(func_type, Function::ExternalLinkage, dec_body->name, context.llvmModule);
-    context.setFunction(dec_body->name, func, return_sctype, param_sctype);
+    llvm::ArrayRef<Type*> param_llvm_types_ref(param_llvm_types);
+    llvm::FunctionType *func_type = llvm::FunctionType::get(context.builder.getInt32Ty(), param_llvm_types_ref, false);
+    llvm::Function *func = llvm::Function::Create(func_type, Function::ExternalLinkage, dec_body->name, context.llvmModule.get());
+    context.setFunction(dec_body->name, func, return_sctype, param_sctypes);
     return func;
 }
 
@@ -341,7 +356,7 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         this->logerr("Callee is empty!");
         exit(1);
     }
-    if(callee.arg_size() != this->expressions->expression_list.size()) {
+    if(callee->arg_size() != this->expressions->expression_list.size()) {
         this->logerr("Argument number does not match!");
         exit(1);
     }
@@ -356,4 +371,24 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
     }
     string call = "call_";
     return context.builder.CreateCall(callee, argsv, call+this->f_name);
+}
+
+llvm::Value* scNStatements::code_generate(scContext& context) {
+    llvm::Value* value;
+    for(auto it = this->statement_list.begin(); it != this->statement_list.end(); ++it) {
+        value = (*it)->code_generate(context);
+    }
+    return value;
+}
+
+llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
+    llvm::Function* func = this->func_declaration->code_generate(context);
+    assert(func != nullptr);
+    this->block->parent_function = func;
+    this->block->code_generate(context);
+    return func;
+}
+
+llvm::Value* scNString::code_generate(scContext& context) {
+    return context.builder.CreateGlobalStringPtr(this->value);
 }

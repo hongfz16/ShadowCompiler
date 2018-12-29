@@ -67,6 +67,7 @@ public:
     virtual void print_debug(int depth) = 0;
     static void print_depth(int depth);
     virtual Value* code_generate(scContext& context) = 0;
+	void logerr(const string&);
 };
 
 class scNType : public scNNode
@@ -241,11 +242,11 @@ public:
 class scNFunctionDeclaration : public scNDeclaration
 {
 public:
-    shared_ptr<scNType> type;
+    int type;
     shared_ptr<scNDeclarationBody> dec_body;
     shared_ptr<scNParams> param_list;
 public:
-    scNFunctionDeclaration(shared_ptr<scNType> type, shared_ptr<scNDeclarationBody> dec_body, shared_ptr<scNParams> param_list)
+    scNFunctionDeclaration(int type, shared_ptr<scNDeclarationBody> dec_body, shared_ptr<scNParams> param_list)
     : type(type), dec_body(dec_body), param_list(param_list) {class_name = "scNFunctionDeclaration";}
 
     Value* code_generate(scContext& context);
@@ -290,7 +291,6 @@ public:
     : type(type), dec_body(body) {class_name = "scNVariableDeclaration";}
 
     Value* code_generate(scContext& context);
-	scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize);
 	void print_debug(int depth);
 };
 
@@ -332,7 +332,7 @@ public:
 	
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNExpressions: public scNExpression {
