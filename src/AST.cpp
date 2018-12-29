@@ -269,27 +269,8 @@ void scNDereferenceExpression::print_debug(int depth) {
     try_to_print((shared_ptr<scNNode>)expression, depth);
 }
 
-Value* scNFunctionDeclaration::code_generate(scContext& context) {
-    vector<shared_ptr<scNDeclarationBody> > lst;
-
-    for(shared_ptr<scNDeclarationBody> ptr = dec_body; ptr; ptr = ptr->children)
-        lst.pub(ptr);
-    auto it = lst.rbegin();
-    Type* type = context.number2type(this->type);
-    string varName = (*it)->name;
-    for(++it; it != lst.rend(); ++it) {
-        shared_ptr<scNDeclarationBody> ptr = *it;
-        if(ptr->is_ptr)
-            type = type->getPointerTo();
-        else if(ptr->is_array)
-            type = ArrayType::get(type, ptr->size);
-    }
-    scType* sctype = context.typeSystem.getType(type);
-
-    
-}
-
-Value* scNVariableDeclaration::code_generate(scContext& context) {
+scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize)
+{
     // get info
     vector<shared_ptr<scNDeclarationBody> > lst;
 
@@ -298,14 +279,81 @@ Value* scNVariableDeclaration::code_generate(scContext& context) {
     auto it = lst.rbegin();
     Type* type = context.number2type(this->type);
     string varName = (*it)->name;
+
+    isarray = false;
+    arraysize = 1;
+//    bool isptr, isarray;
     for(++it; it != lst.rend(); ++it) {
         shared_ptr<scNDeclarationBody> ptr = *it;
+        isarray = ptr->is_array();
+        arraysize = ptr->size;
         if(ptr->is_ptr)
             type = type->getPointerTo();
         else if(ptr->is_array)
             type = ArrayType::get(type, ptr->size);
     }
     scType* sctype = context.typeSystem.getType(type);
+    return sctype;
+}
 
+Value* scNVariableDeclaration::code_generate(scContext& context) {
     //TODO: code gen
+    Value* allocaInst = nullptr;
+    if(isarray) {
+        allocaInst = context.builder.CreateAlloca(type, arraysize);
+    }
+    else {
+        allocaInst = context.builder.CreateAlloca(type);
+    }
+}
+
+llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
+    //get return type
+    Function* seeked_func = context.seekFunction(dec_body->name);
+    if(seeked_func!=nullptr) {
+        return seeked_func;
+    }
+    bool isarray;
+    int arraysize;
+    string name;
+    scType* return_sctype = getTypeFromDeclarationBody(dec_body, isarray, arraysize, name);
+    //get param type
+    std::vector<Type*> param_llvm_types;
+    std::vector<scType*> param_sctypes;
+    if(param_list!=nullptr) {
+        for(auto it = param_list->param_list.begin(); it!=param_list->param_list.end(); ++it) {
+            scType* param_sctype = getTypeFromDeclarationBody(*it, isarray, arraysize, name);
+            param_llvm_types.push_back(param_sctype->getllvmType());
+            param_sctype.push_back(param_sctype);
+        }
+    }
+    ArrayRef<Type*> param_llvm_types_ref(param_llvm_types);
+    FunctionType *func_type = FunctionType::get(builder.getInt32Ty(), param_llvm_types_ref, false);
+    Function *func = Function::Create(func_type, Function::ExternalLinkage, dec_body->name, context.llvmModule);
+    context.setFunction(dec_body->name, func, return_sctype, param_sctype);
+    return func;
+}
+
+llvm::Value* scNFunctionCall::code_generate(scContext& context) {
+    assert(this->expressions!=nullptr);
+    Function* callee = context.seekFunction(this->f_name);
+    if(callee == nullptr) {
+        this->logerr("Callee is empty!");
+        exit(1);
+    }
+    if(callee.arg_size() != this->expressions->expression_list.size()) {
+        this->logerr("Argument number does not match!");
+        exit(1);
+    }
+    std::vector<llvm::Value*> argsv;
+    for(auto it = this->expressions->expression_list.begin(); it != this->expressions->expression_list.end(); ++it) {
+        llvm::Value* value = (*it)->code_generate(context);
+        if(value==nullptr) {
+            this->logerr("Argument value can not be nullptr!");
+            exit(1);
+        }
+        argsv.push_back(value);
+    }
+    string call = "call_";
+    return context.builder.CreateCall(callee, argsv, call+this->f_name);
 }

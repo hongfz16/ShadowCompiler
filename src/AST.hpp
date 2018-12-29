@@ -290,8 +290,8 @@ public:
     : type(type), dec_body(body) {class_name = "scNVariableDeclaration";}
 
     Value* code_generate(scContext& context);
-
-    void print_debug(int depth);
+	scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize);
+	void print_debug(int depth);
 };
 
 class scNParams : public scNNode

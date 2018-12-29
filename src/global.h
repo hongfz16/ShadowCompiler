@@ -18,6 +18,7 @@
 #include <string>
 #include <map>
 #include <iostream>
+#include <assert.h>
 // #include "grammar.hpp"
 
 #define pub(a) push_back(a)
