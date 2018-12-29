@@ -112,7 +112,7 @@ Function* scContext::seekFunction(string &name) {
         if((rtn = (*it)->seekFunction(name)) != nullptr)
             return rtn;
     }
-    return rtn;
+    return nullptr;
 }
 
 Type* scContext::number2type(int number) {

@@ -177,6 +177,7 @@ public:
     }
 
     Value* code_generate(scContext& context);
+//    Function* getParentFunction();
     void print_debug(int depth);
 };
 
