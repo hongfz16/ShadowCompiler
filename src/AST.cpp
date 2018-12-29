@@ -268,24 +268,23 @@ void scNDereferenceExpression::print_debug(int depth) {
     try_to_print((shared_ptr<scNNode>)expression, depth);
 }
 
-
 Value* scNVariableDeclaration::code_generate(scContext& context) {
     // get info
-    // vector<shared_ptr<scNDeclarationBody> > lst;
+    vector<shared_ptr<scNDeclarationBody> > lst;
 
-    // for(shared_ptr<scNDeclarationBody> ptr = dec_body; ptr; ptr = ptr->children)
-    //     lst.pub(ptr);
-    // auto it = lst.rbegin();
-    // Type* type = context.number2sctype(this->type);
-    // string varName = (*it)->name;
-    // for(++it; it != lst.rend(); ++it) {
-    //     shared_ptr<scNDeclarationBody> ptr = *it;
-    //     if(ptr->is_ptr)
-    //         type = type->getPointerTo();
-    //     else if(ptr->is_array)
-    //         type = ArrayType::get(type, ptr->size);
-    // }
-    // scType* sctype = context.typeSystem.getType(type);
+    for(shared_ptr<scNDeclarationBody> ptr = dec_body; ptr; ptr = ptr->children)
+        lst.pub(ptr);
+    auto it = lst.rbegin();
+    Type* type = context.number2type(this->type);
+    string varName = (*it)->name;
+    for(++it; it != lst.rend(); ++it) {
+        shared_ptr<scNDeclarationBody> ptr = *it;
+        if(ptr->is_ptr)
+            type = type->getPointerTo();
+        else if(ptr->is_array)
+            type = ArrayType::get(type, ptr->size);
+    }
+    scType* sctype = context.typeSystem.getType(type);
 
     //TODO: code gen
 }

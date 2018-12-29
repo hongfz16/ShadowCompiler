@@ -110,3 +110,6 @@ Function* scContext::seekFunction(string &name) {
     return rtn;
 }
 
+Type* scContext::number2type(int number) {
+    return builder.getInt32Ty();
+}

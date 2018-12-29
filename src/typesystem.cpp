@@ -22,6 +22,7 @@ scType* TypeSystem::getType(Type *type) {
         if((*it)->type == type)
             return (*it);
     types.pub(new scType(type));
+    return types.back();
 }
 
 void TypeSystem::setTypeName(scType *sctype, string &name) {
