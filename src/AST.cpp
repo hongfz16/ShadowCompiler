@@ -24,6 +24,18 @@ using std::cout;
 using std::endl;
 using llvm::Value;
 
+static Value* to_boolean(scContext& context, Value* rawVal)
+{
+    if( ISTYPE(rawVal, Type::IntegerTyID) ){
+        rawVal = context.builder.CreateIntCast(rawVal, Type::getInt1Ty(context.llvmContext), true);
+        return context.builder.CreateICmpNE(rawVal, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
+    }else if( ISTYPE(rawVal, Type::DoubleTyID) ){
+        return context.builder.CreateFCmpONE(rawVal, ConstantFP::get(context.llvmContext, APFloat(0.0)));
+    }else{
+        return rawVal;
+    }
+}
+
 void try_to_print(shared_ptr<scNNode> ptr, int depth)
 {
     if(ptr == nullptr)
@@ -407,4 +419,33 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     statements->code_generate(context);
     context.popBlock();
     return basicBlock;
+}
+
+llvm::Value* scNIfStatement::code_generate(scContext &context){
+    Function* par_func = context.getCurrentBlock()->getParentFunction();
+    Value* condVal = this->expression->code_generate(context);
+    if(!condVal)
+    {
+        return nullptr;
+    }
+    condVal = to_boolean(context, condVal);
+    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+
+    BasicBlock* trueBB = BasicBlock::Create(context.llvmContext, "if_true", parFunction);
+    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "if_cont", parFunction);
+
+    context.builder.CreateCondBr(condVal, trueBB, contBB);
+
+    context.builder.SetInsertPoint(trueBB);
+    context.pushBlock(trueBB);
+    this->statement->code_generate(context);
+    context.popBlock();
+
+    if(trueBB->getTerminator() == nullptr)
+    {
+        context.builder.CreateBr(mergeBB);
+    }
+
+    context.builder.SetInsertPoint(contBB);
+    return nullptr;
 }
