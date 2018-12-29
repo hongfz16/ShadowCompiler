@@ -21,7 +21,8 @@ public:
 
     TypeSystem(LLVMContext&);
 
-    scType* getType(Type*);
+    scType* getscType(Type*);
+    Type* getllvmType(scType*);
     void setTypeName(scType*, string&);
     void addCast(scType*, scType*, CastInst::CastOps);
     CastInst::CastOps* getCast(scType*, scType*);

@@ -268,7 +268,8 @@ void scNDereferenceExpression::print_debug(int depth) {
     try_to_print((shared_ptr<scNNode>)expression, depth);
 }
 
-Value* scNVariableDeclaration::code_generate(scContext& context) {
+scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize)
+{
     // get info
     vector<shared_ptr<scNDeclarationBody> > lst;
 
@@ -277,14 +278,31 @@ Value* scNVariableDeclaration::code_generate(scContext& context) {
     auto it = lst.rbegin();
     Type* type = context.number2type(this->type);
     string varName = (*it)->name;
+
+    isarray = false;
+    arraysize = 1;
+//    bool isptr, isarray;
     for(++it; it != lst.rend(); ++it) {
         shared_ptr<scNDeclarationBody> ptr = *it;
+        isarray = ptr->is_array();
+        arraysize = ptr->size;
         if(ptr->is_ptr)
             type = type->getPointerTo();
         else if(ptr->is_array)
             type = ArrayType::get(type, ptr->size);
     }
     scType* sctype = context.typeSystem.getType(type);
+    return sctype;
+}
+
+Value* scNVariableDeclaration::code_generate(scContext& context) {
 
     //TODO: code gen
+    Value* allocaInst = nullptr;
+    if(isarray) {
+        allocaInst = context.builder.CreateAlloca(type, arraysize);
+    }
+    else {
+        allocaInst = context.builder.CreateAlloca(type);
+    }
 }

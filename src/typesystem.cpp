@@ -17,12 +17,16 @@ TypeSystem::TypeSystem(LLVMContext &tllvmContext): llvmContext(tllvmContext) {
     castTable.clear();
 }
 
-scType* TypeSystem::getType(Type *type) {
+scType* TypeSystem::getscType(Type *type) {
     for(vti it = types.begin(); it != types.end(); ++it)
         if((*it)->type == type)
             return (*it);
     types.pub(new scType(type));
     return types.back();
+}
+
+Type* TypeSystem::getllvmType(scType * sctype) {
+    return sctype == nullptr ? nullptr : sctype->type;
 }
 
 void TypeSystem::setTypeName(scType *sctype, string &name) {
