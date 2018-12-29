@@ -38,6 +38,8 @@ int main() {
 
 	TopBlock->code_generate(context);
 
+	cout<<"topblock done"<<endl;
+
 	context.popBlock();
 	string filename = "out.ll";
 	writeModuleToFile(context.llvmModule.get(), filename);
