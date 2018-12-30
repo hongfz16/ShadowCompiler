@@ -31,7 +31,14 @@ int main() {
 	cout<<"Finish parsing"<<endl;
 	TopBlock->print_debug(0);
 	scContext context;
+
+	BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "top-entry", nullptr, nullptr);
+	context.builder.SetInsertPoint(basicBlock);
+	context.pushBlock(basicBlock);
+
 	TopBlock->code_generate(context);
+
+	context.popBlock();
 	string filename = "out.ll";
 	writeModuleToFile(context.llvmModule.get(), filename);
 	return 0;

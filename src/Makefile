@@ -7,9 +7,9 @@ OBJS = grammar.o       \
 		typesystem.o   \
 		AST.o          \
 
-LLVMCONFIG = llvm-config
-CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++11
-LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/usr/local/lib -ljsoncpp
+LLVMCONFIG = llvm-config-7
+CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++11 -g
+LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/usr/local/lib 
 LIBS = `$(LLVMCONFIG) --libs`
 
 clean:
