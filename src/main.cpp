@@ -32,10 +32,14 @@ int main() {
 	TopBlock->print_debug(0);
 	scContext context;
 
-	BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "top-entry", nullptr, nullptr);
+    llvm::FunctionType* funcType = llvm::FunctionType::get(context.builder.getInt32Ty(), false);
+    llvm::Function *mainfunc = llvm::Function::Create(funcType, Function::ExternalLinkage, "main", context.llvmModule.get());
+	BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "top-entry", mainfunc, nullptr);
 	context.builder.SetInsertPoint(basicBlock);
+
 	context.pushBlock(basicBlock);
 
+    context.builder.CreateGlobalStringPtr("fuc");
 	TopBlock->code_generate(context);
 
 	context.popBlock();

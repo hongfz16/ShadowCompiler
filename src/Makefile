@@ -7,7 +7,7 @@ OBJS = grammar.o       \
 		typesystem.o   \
 		AST.o          \
 
-LLVMCONFIG = llvm-config
+LLVMCONFIG = llvm-config-7
 CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++11 -g
 LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/usr/local/lib 
 LIBS = `$(LLVMCONFIG) --libs`

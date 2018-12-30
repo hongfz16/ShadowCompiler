@@ -76,6 +76,9 @@ void scNStatements::print_debug(int depth)
 {
     this->print_depth(depth);
     cout<<this->class_name<<endl;
+
+
+
     for(auto it = this->statement_list.begin(); it != this->statement_list.end(); it++)
     {
         try_to_print((shared_ptr<scNNode>)(*it), depth);
@@ -276,6 +279,7 @@ void scNDereferenceExpression::print_debug(int depth) {
 
 scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, int type, scContext& context, bool& isarray, int& arraysize, string& name) {
     // get info
+    // get info
     vector<shared_ptr<scNDeclarationBody> > lst;
 
     for(shared_ptr<scNDeclarationBody> ptr = head_ptr; ptr; ptr = ptr->children)
@@ -301,6 +305,8 @@ scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, int 
 }
 
 llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     bool isarray = false;
     int arraysize = 1;
     string varName;
@@ -323,6 +329,8 @@ llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
 }
 
 llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     //get return type
     Function* seeked_func = context.seekFunction(dec_body->name);
     if(seeked_func!=nullptr) {
@@ -350,6 +358,8 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
 }
 
 llvm::Value* scNFunctionCall::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     assert(this->expressions!=nullptr);
     Function* callee = context.seekFunction(this->f_name);
     if(callee == nullptr) {
@@ -360,9 +370,13 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         this->logerr("Argument number does not match!");
         exit(1);
     }
+
+
     std::vector<llvm::Value*> argsv;
     for(auto it = this->expressions->expression_list.begin(); it != this->expressions->expression_list.end(); ++it) {
+
         llvm::Value* value = (*it)->code_generate(context);
+        cout<<"fuk return "<< endl;
         if(value==nullptr) {
             this->logerr("Argument value can not be nullptr!");
             exit(1);
@@ -370,18 +384,26 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         argsv.push_back(value);
     }
     string call = "call_";
+    cout<<"fuk - before return "<< endl;
     return context.builder.CreateCall(callee, argsv, call+this->f_name);
 }
 
 llvm::Value* scNStatements::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
+
+
     llvm::Value* value;
     for(auto it = this->statement_list.begin(); it != this->statement_list.end(); ++it) {
         value = (*it)->code_generate(context);
+        cout <<"statement done"<<endl;
     }
     return value;
 }
 
 llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
     this->block->parent_function = func;
@@ -390,10 +412,16 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 }
 
 llvm::Value* scNString::code_generate(scContext& context) {
-    return context.builder.CreateGlobalStringPtr(this->value.c_str(), this->value.c_str());
+    cout<<"generating " << class_name << endl;
+    cout<< "gen fuk" <<endl;
+    context.builder.CreateGlobalStringPtr("fuk");
+    cout<<"fuk done"<<endl;
+
+    return context.builder.CreateGlobalStringPtr("hello");
 }
 
 llvm::Value* scNBlock::code_generate(scContext &context) {
+    cout<<"generating " << class_name << endl;
     Function* par_func;
 
     if(this->parent_function != nullptr)
@@ -401,12 +429,17 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     else
         par_func = context.getCurrentBlock()->getParentFunction();
 
-    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", nullptr, nullptr);
+    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
     context.builder.SetInsertPoint(basicBlock);
+
+
     context.pushBlock(basicBlock);
     context.getCurrentBlock()->setParentFunction(par_func);
     assert(statements != nullptr);
     statements->code_generate(context);
+
+    cout<<"block gen done" << endl;
+
     context.popBlock();
     return basicBlock;
 }
