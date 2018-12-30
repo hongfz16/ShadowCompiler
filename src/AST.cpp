@@ -279,7 +279,6 @@ void scNDereferenceExpression::print_debug(int depth) {
 
 scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, int type, scContext& context, bool& isarray, int& arraysize, string& name) {
     // get info
-    // get info
     vector<shared_ptr<scNDeclarationBody> > lst;
 
     for(shared_ptr<scNDeclarationBody> ptr = head_ptr; ptr; ptr = ptr->children)
@@ -322,7 +321,7 @@ llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
     }
     Value* rtnvalue = context.setIdentifier(varName, allocaInst, sctype);
     if(rtnvalue == nullptr) {
-        logerr("duplicated variable name!");
+        logerr("Duplicated variable name!");
         exit(1);
     }
     return allocaInst;
@@ -352,7 +351,7 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
     }
     llvm::ArrayRef<Type*> param_llvm_types_ref(param_llvm_types);
     llvm::FunctionType *func_type = llvm::FunctionType::get(context.builder.getInt32Ty(), param_llvm_types_ref, false);
-    llvm::Function *func = llvm::Function::Create(func_type, Function::ExternalLinkage, dec_body->name, context.llvmModule.get());
+    llvm::Function *func = llvm::Function::Create(func_type, llvm::GlobalValue::ExternalLinkage, dec_body->name.c_str(), context.llvmModule.get());
     context.setFunction(dec_body->name, func, return_sctype, param_sctypes);
     return func;
 }
@@ -370,13 +369,9 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         this->logerr("Argument number does not match!");
         exit(1);
     }
-
-
     std::vector<llvm::Value*> argsv;
     for(auto it = this->expressions->expression_list.begin(); it != this->expressions->expression_list.end(); ++it) {
-
         llvm::Value* value = (*it)->code_generate(context);
-        cout<<"fuk return "<< endl;
         if(value==nullptr) {
             this->logerr("Argument value can not be nullptr!");
             exit(1);
@@ -384,14 +379,11 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         argsv.push_back(value);
     }
     string call = "call_";
-    cout<<"fuk - before return "<< endl;
     return context.builder.CreateCall(callee, argsv, call+this->f_name);
 }
 
 llvm::Value* scNStatements::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
-
-
 
     llvm::Value* value;
     for(auto it = this->statement_list.begin(); it != this->statement_list.end(); ++it) {
@@ -407,17 +399,21 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
     llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
     this->block->parent_function = func;
-    this->block->code_generate(context);
+    llvm::BasicBlock* basicBlock = llvm::BasicBlock::Create(context.llvmContext, "entry", func, nullptr);
+    context.builder.SetInsertPoint(basicBlock);
+
+    if(this->block->statements!=nullptr) {
+        this->block->statements->code_generate(context);
+    }
+    
+    context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 0)));
+    // this->block->code_generate(context);
     return func;
 }
 
 llvm::Value* scNString::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
-    cout<< "gen fuk" <<endl;
-    context.builder.CreateGlobalStringPtr("fuk");
-    cout<<"fuk done"<<endl;
-
-    return context.builder.CreateGlobalStringPtr("hello");
+    return context.builder.CreateGlobalStringPtr(this->value);
 }
 
 llvm::Value* scNBlock::code_generate(scContext &context) {
@@ -429,17 +425,22 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     else
         par_func = context.getCurrentBlock()->getParentFunction();
 
-    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
-    context.builder.SetInsertPoint(basicBlock);
+    // BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
+    // context.builder.SetInsertPoint(basicBlock);
 
 
-    context.pushBlock(basicBlock);
-    context.getCurrentBlock()->setParentFunction(par_func);
-    assert(statements != nullptr);
-    statements->code_generate(context);
+    // context.pushBlock(basicBlock);
+    // context.getCurrentBlock()->setParentFunction(par_func);
+    // assert(statements != nullptr);
+    if(statements!=nullptr) {
+        statements->code_generate(context);
+    }
 
-    cout<<"block gen done" << endl;
+    // cout<<"block gen done" << endl;
+    // context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 1)));
 
-    context.popBlock();
-    return basicBlock;
+    // context.popBlock();
+    // context.builder.SetInsertPoint(context.getCurrentBlock()->block);
+    // return basicBlock;
+    return nullptr;
 }
