@@ -124,3 +124,28 @@ void scBlock::setParentFunction(Function *func) {
 Function* scBlock::getParentFunction() {
     return parent_function;
 }
+
+llvm::BasicBlock* scContext::getCurrentBreakToBlock() {
+    return breakToBlocks.empty()? nullptr: breakToBlocks.back();
+}
+
+llvm::BasicBlock* scContext::getCurrentContinueToBlock() {
+    return continueToBlocks.empty()? nullptr: continueToBlocks.back();
+}
+
+void scContext::pushBreakToBlock(llvm::BasicBlock* basicblock) {
+    breakToBlocks.pub(basicblock);
+}
+
+void scContext::pushContinueToBlock(llvm::BasicBlock* basicblock) {
+    continueToBlocks.pub(basicblock);
+
+}
+
+void scContext::popBreakToBlock() {
+    breakToBlocks.pob();
+}
+
+void scContext::popContinueToBlock() {
+    continueToBlocks.pob();
+}

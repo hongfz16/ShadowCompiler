@@ -71,6 +71,9 @@ public:
     IRBuilder<> builder;
     unique_ptr<Module> llvmModule;
     TypeSystem typeSystem;
+    vector<llvm::BasicBlock*> breakToBlocks;
+    vector<llvm::BasicBlock*> continueToBlocks;
+
 public:
     scContext();
     ~scContext();
@@ -84,6 +87,13 @@ public:
     scBlock* getCurrentBlock();
     void setCurrentReturnValue(Value*, scType*);
     Type* number2type(int number);
+    llvm::BasicBlock* getCurrentBreakToBlock();
+    llvm::BasicBlock* getCurrentContinueToBlock();
+    void pushBreakToBlock(llvm::BasicBlock*);
+    void pushContinueToBlock(llvm::BasicBlock*);
+    void popBreakToBlock();
+    void popContinueToBlock();
+
 };
 
 #endif //SRC_CONTEXT_H
