@@ -277,7 +277,7 @@ public:
 public:
     scNReturnStatement(shared_ptr<scNExpression> ex)
     : expression(ex){class_name = "scNReturnStatement";}
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context)
 
     void print_debug(int depth);
 };

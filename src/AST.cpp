@@ -398,16 +398,15 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 
     llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
-    this->block->parent_function = func;
+    // this->block->parent_function = func;
     llvm::BasicBlock* basicBlock = llvm::BasicBlock::Create(context.llvmContext, "entry", func, nullptr);
     context.builder.SetInsertPoint(basicBlock);
 
-    if(this->block->statements!=nullptr) {
-        this->block->statements->code_generate(context);
-    }
+    context.pushBlock(basicBlock);
+    this->block->code_generate(context);
+    // context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 0)));
+    context.popBlock();
     
-    context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 0)));
-    // this->block->code_generate(context);
     return func;
 }
 
@@ -439,4 +438,11 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
 
     context.popBlock();
     return nullptr;
+}
+
+llvm::Value* scNReturnStatement::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    llvm::Value* value = this->expression->code_generate(context);
+    return context.builder.CreateRet(value);
 }
