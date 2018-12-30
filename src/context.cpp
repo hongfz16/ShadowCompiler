@@ -30,10 +30,10 @@ scBlock::~scBlock()
         delete (*it).second;
 }
 
-Value* scBlock::seekIdentifier(string& name)
+scVariable* scBlock::seekIdentifier(string& name)
 {
     msvi it = VSymboltable.find(name);
-    return it == VSymboltable.end()? nullptr: it->second->value;
+    return it == VSymboltable.end()? nullptr: it->second;
 }
 
 Function* scBlock::seekFunction(string& name)
@@ -42,11 +42,12 @@ Function* scBlock::seekFunction(string& name)
     return it == FSymboltable.end()? nullptr: it->second->function;
 }
 
-Value* scBlock::setIdentifier(string &name, Value *value, scType *sctype) {
+scVariable* scBlock::setIdentifier(string &name, Value *value, scType *sctype) {
     if(VSymboltable.find(name) != VSymboltable.end())
         return nullptr;
-    VSymboltable[name] = new scVariable(value, sctype);
-    return value;
+    scVariable* p = new scVariable(value, sctype);
+    VSymboltable[name] = p;
+    return p;
 }
 
 Function* scBlock::setFunction(string &name, Function *function, scType* ttype, vt& tvt) {
@@ -93,12 +94,12 @@ Function* scContext::setFunction(string &name, Function *function, scType *rtnty
     return blocks.back()->setFunction(name, function, rtntype, tvt);
 }
 
-Value* scContext::setIdentifier(string &name, Value *value, scType *type) {
+scVariable* scContext::setIdentifier(string &name, Value *value, scType *type) {
     return blocks.back()->setIdentifier(name, value, type);
 }
 
-Value* scContext::seekIdentifier(string &name) {
-    Value* rtn;
+scVariable* scContext::seekIdentifier(string &name) {
+    scVariable* rtn;
     for(auto it = blocks.rbegin(); it != blocks.rend(); ++it) {
         if((rtn = (*it)->seekIdentifier(name)) != nullptr)
             return rtn;

@@ -56,9 +56,9 @@ public:
     scBlock(BasicBlock*);
     ~scBlock();
 //    void setReturnValue();
-    Value* seekIdentifier(string&);
+    scVariable* seekIdentifier(string&);
     Function* seekFunction(string&);
-    Value* setIdentifier(string&, Value*, scType*);
+    scVariable* setIdentifier(string&, Value*, scType*);
     Function* setFunction(string&, Function*, scType*, vt&);
     void setParentFunction(Function*);
     Function* getParentFunction();
@@ -77,9 +77,9 @@ public:
     scBlock* getLastBlock();
     void pushBlock(BasicBlock*);
     void popBlock();
-    Value* seekIdentifier(string&);
+    scVariable* seekIdentifier(string&);
     Function* seekFunction(string&);
-    Value* setIdentifier(string&, Value*, scType*);
+    scVariable* setIdentifier(string&, Value*, scType*);
     Function* setFunction(string&, Function*, scType*, vt&);
     scBlock* getCurrentBlock();
     void setCurrentReturnValue(Value*, scType*);
