@@ -8,6 +8,58 @@
 	{
 		printf("Error: %s\n", s);
 	}
+
+	string toRawString(string& str) {
+	    string rtn;
+	    char tt;
+	    for(int i = 0; i != str.size(); ++i) {
+	        if(str[i] != '\\')
+	            tt = str[i];
+	        else {
+	            ++i;
+	            switch(str[i]) {
+	                case 'a':
+	                    tt = 7;
+	                    break;
+	                case 'b':
+	                    tt = 8;
+	                    break;
+	                case 'n':
+	                    tt = 10;
+	                    break;
+	                case '0':
+	                    tt = 0;
+	                    break;
+	                case 't':
+	                    tt = 9;
+	                    break;
+	                case '\\':
+	                    tt = 92;
+	                    break;
+	                case '\'':
+	                    tt = 39;
+	                    break;
+                    case '\"':
+                        tt = 34;
+                        break;
+                    case 'r':
+                        tt = 13;
+                        break;
+                    case 'f':
+                        tt = 12;
+                        break;
+                    case 'v':
+                        tt = 11;
+                        break;
+                    default:
+                        tt = 0;
+                        break;
+	            }
+	        }
+	        rtn += tt;
+	    }
+	    return rtn;
+	}
 %}
 %union
 {

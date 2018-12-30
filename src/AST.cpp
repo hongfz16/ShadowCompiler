@@ -336,7 +336,7 @@ llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
     else {
         allocaInst = context.builder.CreateAlloca(type);
     }
-    Value* rtnvalue = context.setIdentifier(varName, allocaInst, sctype);
+    scVariable* rtnvalue = context.setIdentifier(varName, allocaInst, sctype);
     if(rtnvalue == nullptr) {
         logerr("Duplicated variable name!");
         exit(1);
