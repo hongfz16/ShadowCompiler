@@ -528,8 +528,37 @@ llvm::Value* scNAssignment::code_generate(scContext& context) {
 
 llvm::Value* scNArrayExpression::code_generate(scContext& context) {
     cout<<"generating "<<class_name<<endl;
+    Value* indexValue = index_expression->code_generate(context);
+    Value* targetValue = target_expression->code_generation(context);
+//    assert(target_expression) check is pointer
+    assert(target_expression->getType()->getTypeId() == Type::PointerTyId);
+    llvm::ArrayRef<Value*> ref = {indexValue};
+    before_value = context.builder.CreateInBoundsGEP(array, ref, "array-op");
+    return context.builder.CreateLoad(before_value);
 }
 
 llvm::Value* scNReferenceExpression::code_generate(scContext& context) {
     cout<<"generating "<<class_name<<endl;
+    before_value = nullptr;
+    Value* value = expression->code_generate(context);
+    assert(expression->before_value != nullptr);
+    return expression->before_value;
+}
+
+llvm::Value* scNDereferenceExpression::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+    before_value = expression->code_generate();
+    return context.builder.CreateLoad(before_value);
+}
+
+llvm::Value* scNContinueStatement::code_generate(scContext &context) {
+    BasicBlock* block = context.getCurrentContinueToBlock();
+    assert(block != nullptr);
+    return context.builder.CreateBr(block);
+}
+
+llvm::Value* scNBreakStatement::code_generate(scContext &context) {
+    BasicBlock* block = context.getCurrentBreakToBlock();
+    assert(block != nullptr);
+    return context.builder.CreateBr(block);
 }

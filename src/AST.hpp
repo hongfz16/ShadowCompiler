@@ -507,7 +507,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNDereferenceExpression: public scNExpression {
@@ -522,8 +522,27 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
+class scNContinueStatement: public scNStatement {
+public:
+    scNContinueStatement() {
+        class_name = "scNContinueStatement";
+    };
+
+    llvm::Value* code_generate(scContext& context);
+
+};
+
+class scNBreakStatement: public scNStatement {
+public:
+    scNContinueStatement() {
+        class_name = "scNBreakStatement";
+    };
+
+    llvm::Value* code_generate(scContext& context);
+
+};
 
 #endif //_AST_HPP_
