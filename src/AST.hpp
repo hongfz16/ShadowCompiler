@@ -100,6 +100,7 @@ class scNExpression: public scNStatement {
 public:
     bool is_assignable;
     scType* type;
+    llvm::Value* before_value;
 public:
     scNExpression(): is_assignable(false),
                      type(nullptr) {

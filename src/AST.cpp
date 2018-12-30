@@ -397,6 +397,9 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
             this->logerr("Argument value can not be nullptr!");
             exit(1);
         }
+        if((*it)->is_assignable) {
+            value = context.builder.CreateLoad(value);
+        }
         argsv.push_back(value);
     }
     string call = "call_";
@@ -432,6 +435,7 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 llvm::Value* scNString::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
     this->is_assignable = false;
+    this->before_value = nullptr;
     llvm::Type* llvm_type = context.builder.getInt8PtrTy();
     this->type = context.typeSystem.getscType(llvm_type);
     return context.builder.CreateGlobalStringPtr(this->value.substr(1,this->value.size()-2));
@@ -458,6 +462,7 @@ llvm::Value* scNInt32Number::code_generate(scContext &context) {
     cout<<"generating "<<class_name<<endl;
 
     this->is_assignable = false;
+    this->before_value = nullptr;
     this->type = context.typeSystem.getscType(context.builder.getInt32Ty());
     return llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, value));
 }
@@ -466,6 +471,7 @@ llvm::Value* scNDouble64Number::code_generate(scContext& context) {
     cout<<"generating "<<class_name<<endl;
 
     this->is_assignable = false;
+    this->before_value = nullptr;
     this->type = context.typeSystem.getscType(context.builder.getDoubleTy());
     return llvm::ConstantFP::get(context.builder.getDoubleTy(), this->value);
 }
@@ -474,6 +480,7 @@ llvm::Value* scNChar::code_generate(scContext& context) {
     cout<<"generating "<<class_name<<endl;
 
     this->is_assignable = false;
+    this->before_value = nullptr;
     this->type = context.typeSystem.getscType(context.builder.getInt8Ty());
     int c = this->value[1];
     return llvm::ConstantInt::get(context.builder.getInt8Ty(), c);
@@ -486,11 +493,15 @@ llvm::Value* scNIdentifier::code_generate(scContext& context) {
     scVariable* scvar = context.seekIdentifier(this->name);
     assert(scvar!=nullptr);
     this->type = scvar->type;
+    this->before_value = scvar->value;
     return context.builder.CreateLoad(scvar->value);
 }
 
 llvm::Value* scNAssignment::code_generate(scContext& context) {
     cout<<"generating "<<class_name<<endl;
+
+    llvm::Value* src_llvm_value = right_expression->code_generate(context);
+    llvm::Value* dst_llvm_value = left_expression->code_generate(context);
 
     if(!left_expression->is_assignable) {
         this->logerr("Cannot assign value to a right value.");
@@ -500,11 +511,16 @@ llvm::Value* scNAssignment::code_generate(scContext& context) {
     this->is_assignable = true;
     this->type = left_expression->type;
 
-    llvm::Value* src_llvm_value = right_expression->code_generate(context);
-    llvm::Value* dst_llvm_value = left_expression->code_generate(context);
+    if(right_expression->type != left_expression->type) {
+        src_llvm_value = context.typeSystem.getCast(right_expression->type, 
+            left_expression->type, src_llvm_value, context.getCurrentBlock()->block);
+    }
 
-    src_llvm_value = context.typeSystem.getCast(right_expression->type, 
-        left_expression->type, src_llvm_value, context.getCurrentBlock()->block);
+    assert(src_llvm_value!=nullptr);
+
+    if(right_expression->is_assignable) {
+        src_llvm_value = context.builder.CreateLoad(src_llvm_value);
+    }
 
     context.builder.CreateStore(src_llvm_value, dst_llvm_value);
     return dst_llvm_value;

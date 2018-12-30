@@ -15,6 +15,7 @@ void scType::setName(string &tname) {
 TypeSystem::TypeSystem(LLVMContext &tllvmContext): llvmContext(tllvmContext) {
     types.clear();
     castTable.clear();
+    addCast(getscType(Type::getInt32Ty(tllvmContext)), getscType(Type::getFloatTy(tllvmContext)),llvm::CastInst::SIToFP);
 }
 
 scType* TypeSystem::getscType(Type *type) {
