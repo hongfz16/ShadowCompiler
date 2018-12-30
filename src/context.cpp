@@ -3,7 +3,7 @@
 //
 
 #include "context.h"
-#include "grammar.hpp"
+// #include "grammar.hpp"
 
 scVariable::scVariable(Value* tvalue, scType* ttype): value(tvalue), type(ttype) {
 
@@ -114,24 +114,6 @@ Function* scContext::seekFunction(string &name) {
             return rtn;
     }
     return nullptr;
-}
-
-Type* scContext::number2type(int number) {
-//    return builder.getInt32Ty();
-    switch(number) {
-        case TYINT:
-            return builder.getInt32Ty();
-        case TYDOUBLE:
-            return builder.getDoubleTy();
-        case TYFLOAT:
-            return builder.getFloatTy();
-        case TYCHAR:
-            return builder.getInt8Ty();
-        case TYVOID:
-            return builder.getVoidTy();
-        default:
-            return nullptr;
-    }
 }
 
 void scBlock::setParentFunction(Function *func) {

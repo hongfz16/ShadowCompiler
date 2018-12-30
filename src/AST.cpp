@@ -4,6 +4,7 @@
 
 #include "global.h"
 #include "AST.hpp"
+#include "grammar.hpp"
 
 #include <llvm/IR/Value.h>
 #include <llvm/IR/LLVMContext.h>
@@ -23,6 +24,23 @@ using std::shared_ptr;
 using std::cout;
 using std::endl;
 using llvm::Value;
+
+Type* scContext::number2type(int number) {
+    switch(number) {
+        case TYINT:
+            return builder.getInt32Ty();
+        case TYDOUBLE:
+            return builder.getDoubleTy();
+        case TYFLOAT:
+            return builder.getFloatTy();
+        case TYCHAR:
+            return builder.getInt8Ty();
+        case TYVOID:
+            return builder.getVoidTy();
+        default:
+            return nullptr;
+    }
+}
 
 void try_to_print(shared_ptr<scNNode> ptr, int depth)
 {
@@ -350,7 +368,7 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
         }
     }
     llvm::ArrayRef<Type*> param_llvm_types_ref(param_llvm_types);
-    llvm::FunctionType *func_type = llvm::FunctionType::get(context.builder.getInt32Ty(), param_llvm_types_ref, false);
+    llvm::FunctionType *func_type = llvm::FunctionType::get(context.builder.getInt32Ty(), param_llvm_types_ref, true);
     llvm::Function *func = llvm::Function::Create(func_type, llvm::GlobalValue::ExternalLinkage, dec_body->name.c_str(), context.llvmModule.get());
     context.setFunction(dec_body->name, func, return_sctype, param_sctypes);
     return func;
@@ -365,10 +383,10 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         this->logerr("Callee is empty!");
         exit(1);
     }
-    if(callee->arg_size() != this->expressions->expression_list.size()) {
-        this->logerr("Argument number does not match!");
-        exit(1);
-    }
+    // if(callee->arg_size() != this->expressions->expression_list.size()) {
+    //     this->logerr("Argument number does not match!");
+    //     exit(1);
+    // }
     std::vector<llvm::Value*> argsv;
     for(auto it = this->expressions->expression_list.begin(); it != this->expressions->expression_list.end(); ++it) {
         llvm::Value* value = (*it)->code_generate(context);
@@ -398,22 +416,21 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 
     llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
-    this->block->parent_function = func;
+    // this->block->parent_function = func;
     llvm::BasicBlock* basicBlock = llvm::BasicBlock::Create(context.llvmContext, "entry", func, nullptr);
     context.builder.SetInsertPoint(basicBlock);
 
-    if(this->block->statements!=nullptr) {
-        this->block->statements->code_generate(context);
-    }
+    context.pushBlock(basicBlock);
+    this->block->code_generate(context);
+    // context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 0)));
+    context.popBlock();
     
-    context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 0)));
-    // this->block->code_generate(context);
     return func;
 }
 
 llvm::Value* scNString::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
-    return context.builder.CreateGlobalStringPtr(this->value);
+    return context.builder.CreateGlobalStringPtr(this->value.substr(1,this->value.size()-2));
 }
 
 llvm::Value* scNBlock::code_generate(scContext &context) {
@@ -431,7 +448,7 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
 
 
     context.pushBlock(context.getCurrentBlock()->block);
-    context.getCurrentBlock()->setParentFunction(par_func);
+    // context.getCurrentBlock()->setParentFunction(par_func);
     assert(statements != nullptr);
     statements->code_generate(context);
     // cout<<"block gen done" << endl;
@@ -441,6 +458,12 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     return nullptr;
 }
 
+llvm::Value* scNReturnStatement::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    llvm::Value* value = this->expression->code_generate(context);
+    return context.builder.CreateRet(value);
+}
 
 llvm::Value* scNInt32Number::code_generate(scContext &context) {
     return llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, value));

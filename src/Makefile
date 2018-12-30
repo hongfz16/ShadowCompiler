@@ -17,7 +17,7 @@ clean:
 
 main.cpp: AST.hpp context.h
 
-context.cpp: context.h
+context.cpp: context.h grammar.hpp
 
 typesystem.cpp: typesystem.h
 
