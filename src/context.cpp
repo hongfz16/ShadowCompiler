@@ -16,6 +16,7 @@ scFunction::scFunction(Function *tfunction, scType* ttype, vt& tvt)
 scBlock::scBlock(BasicBlock* tblock): block(tblock), returnValue(nullptr)
 {
     returnValue = nullptr;
+    parent_function = nullptr;
     VSymboltable.clear();
     FSymboltable.clear();
 }
@@ -116,4 +117,12 @@ Function* scContext::seekFunction(string &name) {
 
 Type* scContext::number2type(int number) {
     return builder.getInt32Ty();
+}
+
+void scBlock::setParentFunction(Function *func) {
+    parent_function = func;
+}
+
+Function* scBlock::getParentFunction() {
+    return parent_function;
 }

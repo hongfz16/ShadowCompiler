@@ -47,6 +47,7 @@ public:
 class scBlock {
 public:
     BasicBlock* block;
+    Function* parent_function;
     scVariable* returnValue;
     msv VSymboltable;
     msf FSymboltable;
@@ -59,7 +60,8 @@ public:
     Function* seekFunction(string&);
     Value* setIdentifier(string&, Value*, scType*);
     Function* setFunction(string&, Function*, scType*, vt&);
-
+    void setParentFunction(Function*);
+    Function* getParentFunction();
 };
 
 class scContext {

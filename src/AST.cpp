@@ -320,3 +320,18 @@ Value* scNVariableDeclaration::code_generate(scContext& context) {
 void scNNode::logerr(const string &err_info) {
     cout << err_info << endl;
 }
+
+llvm::Value* scNBlock::code_generate(scContext &context) {
+    Function* par_func = context.getCurrentBlock()->getParentFunction();
+
+    if(this->parent_function != nullptr)
+        par_func = this->parent_function;
+
+    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
+    context.builder.SetInsertPoint(basicBlock);
+    context.pushBlock(basicBlock);
+    context.getCurrentBlock()->setParentFunction(par_func);
+    assert(statements != nullptr);
+    statements->code_generation();
+    context.popBlock();
+}
