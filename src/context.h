@@ -57,9 +57,9 @@ public:
     ~scBlock();
 //    void setReturnValue();
     scVariable* seekIdentifier(string&);
-    Function* seekFunction(string&);
+    scFunction* seekFunction(string&);
     scVariable* setIdentifier(string&, Value*, scType*);
-    Function* setFunction(string&, Function*, scType*, vt&);
+    scFunction* setFunction(string&, Function*, scType*, vt&);
     void setParentFunction(Function*);
     Function* getParentFunction();
 };
@@ -78,9 +78,9 @@ public:
     void pushBlock(BasicBlock*);
     void popBlock();
     scVariable* seekIdentifier(string&);
-    Function* seekFunction(string&);
+    scFunction* seekFunction(string&);
     scVariable* setIdentifier(string&, Value*, scType*);
-    Function* setFunction(string&, Function*, scType*, vt&);
+    scFunction* setFunction(string&, Function*, scType*, vt&);
     scBlock* getCurrentBlock();
     void setCurrentReturnValue(Value*, scType*);
     Type* number2type(int number);

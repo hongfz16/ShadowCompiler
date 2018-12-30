@@ -36,10 +36,10 @@ scVariable* scBlock::seekIdentifier(string& name)
     return it == VSymboltable.end()? nullptr: it->second;
 }
 
-Function* scBlock::seekFunction(string& name)
+scFunction* scBlock::seekFunction(string& name)
 {
     msfi it = FSymboltable.find(name);
-    return it == FSymboltable.end()? nullptr: it->second->function;
+    return it == FSymboltable.end()? nullptr: it->second;
 }
 
 scVariable* scBlock::setIdentifier(string &name, Value *value, scType *sctype) {
@@ -50,11 +50,12 @@ scVariable* scBlock::setIdentifier(string &name, Value *value, scType *sctype) {
     return p;
 }
 
-Function* scBlock::setFunction(string &name, Function *function, scType* ttype, vt& tvt) {
+scFunction* scBlock::setFunction(string &name, Function *function, scType* ttype, vt& tvt) {
     if(FSymboltable.find(name) != FSymboltable.end())
         return nullptr;
-    FSymboltable[name] = new scFunction(function, ttype, tvt);
-    return function;
+    scFunction* p = new scFunction(function, ttype, tvt);
+    FSymboltable[name] = p;
+    return p;
 }
 
 scContext::scContext(): builder(llvmContext), typeSystem(llvmContext) {
@@ -90,7 +91,7 @@ scBlock* scContext::getCurrentBlock() {
     return blocks.size()? blocks.back(): nullptr;
 }
 
-Function* scContext::setFunction(string &name, Function *function, scType *rtntype, vt &tvt) {
+scFunction* scContext::setFunction(string &name, Function *function, scType *rtntype, vt &tvt) {
     return blocks.back()->setFunction(name, function, rtntype, tvt);
 }
 
@@ -107,8 +108,8 @@ scVariable* scContext::seekIdentifier(string &name) {
     return nullptr;
 }
 
-Function* scContext::seekFunction(string &name) {
-    Function* rtn;
+scFunction* scContext::seekFunction(string &name) {
+    scFunction* rtn;
     for(auto it = blocks.rbegin(); it != blocks.rend(); ++it) {
         if((rtn = (*it)->seekFunction(name)) != nullptr)
             return rtn;
