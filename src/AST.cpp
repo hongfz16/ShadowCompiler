@@ -329,7 +329,6 @@ llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
     string varName;
     scType* sctype = getTypeFromDeclarationBody(dec_body, this->type, context, isarray, arraysize, varName);
     Type* type = context.typeSystem.getllvmType(sctype);
-    //TODO: code gen
     Value* allocaInst = nullptr;
     if(isarray) {
         allocaInst = context.builder.CreateAlloca(type, arraysize);
@@ -349,9 +348,9 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
 
     //get return type
-    Function* seeked_func = context.seekFunction(dec_body->name);
+    scFunction* seeked_func = context.seekFunction(dec_body->name);
     if(seeked_func!=nullptr) {
-        return seeked_func;
+        return seeked_func->function;
     }
     bool isarray;
     int arraysize;
@@ -377,12 +376,16 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
 llvm::Value* scNFunctionCall::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
 
+    this->is_assignable = false;
+
     assert(this->expressions!=nullptr);
-    Function* callee = context.seekFunction(this->f_name);
-    if(callee == nullptr) {
+    scFunction* sccallee = context.seekFunction(this->f_name);
+    if(sccallee == nullptr) {
         this->logerr("Callee is empty!");
         exit(1);
     }
+    Function* callee = sccallee->function;
+    this->type = cscallee->retType;
     // if(callee->arg_size() != this->expressions->expression_list.size()) {
     //     this->logerr("Argument number does not match!");
     //     exit(1);
@@ -416,13 +419,11 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 
     llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
-    // this->block->parent_function = func;
     llvm::BasicBlock* basicBlock = llvm::BasicBlock::Create(context.llvmContext, "entry", func, nullptr);
     context.builder.SetInsertPoint(basicBlock);
 
     context.pushBlock(basicBlock);
     this->block->code_generate(context);
-    // context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 0)));
     context.popBlock();
     
     return func;
@@ -430,30 +431,17 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 
 llvm::Value* scNString::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
+    this->is_assignable = false;
+    this->type = context.typeSystem.getscType(context.builder.getInt8PtrTy());
     return context.builder.CreateGlobalStringPtr(this->value.substr(1,this->value.size()-2));
 }
 
 llvm::Value* scNBlock::code_generate(scContext &context) {
     cout<<"generating " << class_name << endl;
 
-//    Function* par_func;
-//
-//    if(this->parent_function != nullptr)
-//        par_func = this->parent_function;
-//    else
-//        par_func = context.getCurrentBlock()->getParentFunction();
-
-//    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
-//    context.builder.SetInsertPoint(basicBlock);
-
-
     context.pushBlock(context.getCurrentBlock()->block);
-    // context.getCurrentBlock()->setParentFunction(par_func);
     assert(statements != nullptr);
     statements->code_generate(context);
-    // cout<<"block gen done" << endl;
-    // context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 1)));
-
     context.popBlock();
     return nullptr;
 }
@@ -466,5 +454,36 @@ llvm::Value* scNReturnStatement::code_generate(scContext& context) {
 }
 
 llvm::Value* scNInt32Number::code_generate(scContext &context) {
+    cout<<"generating "<<class_name<<endl;
+
+    this->is_assignable = false;
+    this->type = context.typeSystem.getscType(context.builder.getInt32Ty());
     return llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, value));
+}
+
+llvm::Value* scNDouble64Number::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    this->is_assignable = false;
+    this->type = context.typeSystem.getscType(context.builder.getDoubleTy());
+    return llvm::ConstantFP::get(context.builder.getDoubleTy(), this->value);
+}
+
+llvm::Value* scNChar::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    this->is_assignable = false;
+    this->type = context.typeSystem.getscType(context.builder.getInt8Ty());
+    int c = this->value[1];
+    return llvm::ConstantInt::get(context.builder.getInt8Ty(), c);
+}
+
+llvm::Value* scNIdentifier::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    this->is_assignable = true;
+    scVariable* scvar = context.seekIdentifier(this->name);
+    assert(scvar!=nullptr);
+    this->type = scvar->type;
+    return scvar->value;
 }

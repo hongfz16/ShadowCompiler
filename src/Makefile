@@ -37,7 +37,7 @@ token.cpp: token.l grammar.hpp
 main: $(OBJS)
 	g++ $(CPPFLAGS) -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
 
-run: main
+run: main test.c
 	./main < test.c
 	clang out.ll -o out
 	./out

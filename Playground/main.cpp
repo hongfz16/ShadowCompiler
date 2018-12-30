@@ -43,6 +43,7 @@ std::unique_ptr<Module> buildModule()
 	Value *array = Builder.CreateAlloca(ArrayType::get(Builder.getInt32Ty(), 100), arraysize);
 	ArrayRef<Value*> ref = {ConstantInt::get(Type::getInt64Ty(TheContext), 0), ConstantInt::get(Type::getInt64Ty(TheContext), 100)};
 	ArrayRef<Value*> ref1 = {ConstantInt::get(Type::getInt64Ty(TheContext), 1)};
+	ArrayRef<Value*> refm1 = {ConstantInt::get(Type::getInt64Ty(TheContext), -1)};
 	ArrayRef<Value*> ref0 = {ConstantInt::get(Type::getInt64Ty(TheContext), 0), ConstantInt::get(Type::getInt64Ty(TheContext), 0)};
 	Builder.CreateStore(Builder.CreateLoad(var), Builder.CreateInBoundsGEP(array, ref, "ass100"));
 	Builder.CreateStore(cst888, Builder.CreateInBoundsGEP(array, ref0, "ass0"));
@@ -51,6 +52,7 @@ std::unique_ptr<Module> buildModule()
 	Constant* const1 = ConstantInt::get(Type::getInt32Ty(TheContext), 1);
 	Value* loadap = Builder.CreateLoad(arraypointer);
 	Value* afterap = Builder.CreateInBoundsGEP(loadap, ref1, "move");
+	Value* afterafterap = Builder.CreateInBoundsGEP(afterap, refm1, "movem1");
 	Builder.CreateStore(afterap, arraypointer);
 	// Value* addresult = Builder.CreateAdd(Builder.CreateLoad(arraypointer), const1);
 	// Builder.CreateStore(Builder.CreateLoad(addresult), arraypointer);

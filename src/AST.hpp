@@ -80,6 +80,7 @@ public:
     {
         class_name = "scNType";
     }
+    //donot need to define this
     Value* code_generate(scContext& context){}
     void print_debug(int depth);
 };
@@ -108,6 +109,7 @@ public:
 
     virtual void print_debug(int depth) = 0;
 
+    //donot need to define this
     virtual llvm::Value* code_generate(scContext& context) {}
 };
 
@@ -125,6 +127,7 @@ public:
     {
         class_name = "scNDeclarationBody";
     }
+    //donot need to define this
     Value* code_generate(scContext& context){}
     void print_debug(int depth);
 };
@@ -302,6 +305,7 @@ public:
     vector<shared_ptr<scNVariableDeclaration>> param_list;
 public:
     scNParams(){class_name = "scNParams";}
+    // donot need to define
     Value* code_generate(scContext& context){}
     void print_debug(int depth);
 };
@@ -317,7 +321,7 @@ public:
 	
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNFunctionCall: public scNExpression {
@@ -394,7 +398,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNNumber: public scNExpression {
@@ -404,7 +408,7 @@ public:
     }
 	~scNNumber() {}
 
-	virtual llvm::Value* code_generate(scContext& context) {}
+	virtual llvm::Value* code_generate(scContext& context) = 0;
 };
 
 class scNInt32Number: public scNNumber {
@@ -432,7 +436,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNAssignment: public scNExpression {
