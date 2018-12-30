@@ -312,12 +312,18 @@ scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, int 
         shared_ptr<scNDeclarationBody> ptr = *it;
         isarray = ptr->is_array;
         arraysize = ptr->size;
-        if(ptr->is_ptr)
+        if(ptr->is_ptr) {
+            cout<<"getPointerTo"<<endl;
             llvm_type = llvm_type->getPointerTo();
-        else if(ptr->is_array)
+        }
+        else if(ptr->is_array) {
+            cout<<"getArray"<<endl;
             llvm_type = ArrayType::get(llvm_type, ptr->size);
+        }
     }
+    cout<<"Final type: "<<llvm_type->getTypeID()<<endl;
     scType* sctype = context.typeSystem.getscType(llvm_type);
+    cout<<"scType final: "<<sctype->type->getTypeID()<<endl;
     return sctype;
 }
 
@@ -331,7 +337,7 @@ llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
     Type* type = context.typeSystem.getllvmType(sctype);
     Value* allocaInst = nullptr;
     if(isarray) {
-        allocaInst = context.builder.CreateAlloca(type, arraysize);
+        allocaInst = context.builder.CreateAlloca(type);//, arraysize);
     }
     else {
         allocaInst = context.builder.CreateAlloca(type);
@@ -341,6 +347,7 @@ llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
         logerr("Duplicated variable name!");
         exit(1);
     }
+    cout<<"scType variable_declaration: "<<sctype->type->getTypeID()<<endl;
     return allocaInst;
 }
 
@@ -510,6 +517,16 @@ llvm::Value* scNIdentifier::code_generate(scContext& context) {
     assert(scvar!=nullptr);
     this->type = scvar->type;
     this->before_value = scvar->value;
+    cout<<"seeked type: "<<this->type->type->getTypeID()<<endl;
+    if(scvar->type->type->getTypeID() == Type::ArrayTyID) {
+        cout<<this->name<<" is array"<<endl;
+        return scvar->value;
+    }
+    // } else if(scvar->value->getType()->getTypeID() == Type::ArrayTyID) {
+    //     cout<<"is array"<<endl;
+    //     ArrayRef<Value*> ref = {}
+    // }
+    cout<<"Identifier: "<<this->name<<" "<<scvar->value->getType()->getTypeID()<<endl;
     return context.builder.CreateLoad(scvar->value);
 }
 
@@ -527,15 +544,66 @@ llvm::Value* scNAssignment::code_generate(scContext& context) {
     this->is_assignable = true;
     this->type = left_expression->type;
 
-    if(right_expression->type != left_expression->type) {
-        src_llvm_value = context.typeSystem.getCast(right_expression->type, 
-            left_expression->type, src_llvm_value, context.getCurrentBlock()->block);
-    }
-    assert(src_llvm_value!=nullptr);
+    assert(right_expression->type != nullptr);
+    assert(left_expression->type != nullptr);
+    // if(right_expression->type != left_expression->type) {
+    //     src_llvm_value = context.typeSystem.getCast(right_expression->type, 
+    //         left_expression->type, src_llvm_value, context.getCurrentBlock()->block);
+    //     // cout<<left_expression->type->type<<endl;
+    //     assert(src_llvm_value!=nullptr);
+    // }
 
     this->before_value = left_expression->before_value;
     assert(this->before_value!=nullptr);
 
     context.builder.CreateStore(src_llvm_value, left_expression->before_value);
     return dst_llvm_value;
+}
+
+llvm::Value* scNArrayExpression::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    this->is_assignable = true;
+    Value* indexValue = index_expression->code_generate(context);
+    Value* targetValue = target_expression->code_generate(context);
+    this->type = context.typeSystem.getscType(target_expression->type->type->getArrayElementType());
+
+//    assert(target_expression) check is pointer
+    // assert(targetValue->getType()->getTypeID() == Type::PointerTyID);
+    llvm::ArrayRef<Value*> ref = {llvm::ConstantInt::get(Type::getInt64Ty(context.llvmContext), 0),indexValue};
+    before_value = context.builder.CreateInBoundsGEP(targetValue, ref, "array-op");
+    
+    return context.builder.CreateLoad(before_value);
+}
+
+llvm::Value* scNReferenceExpression::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+    
+    this->is_assignable = false;
+    before_value = nullptr;
+    Value* value = expression->code_generate(context);
+    this->type = context.typeSystem.getscType(expression->type->type->getPointerTo());
+    assert(expression->before_value != nullptr);
+    return expression->before_value;
+}
+
+llvm::Value* scNDereferenceExpression::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+    
+    this->is_assignable = true;
+    before_value = expression->code_generate(context);
+    this->type = context.typeSystem.getscType(expression->type->type->getPointerElementType());
+    return context.builder.CreateLoad(before_value);
+}
+
+llvm::Value* scNContinueStatement::code_generate(scContext &context) {
+    BasicBlock* block = context.getCurrentContinueToBlock();
+    assert(block != nullptr);
+    return context.builder.CreateBr(block);
+}
+
+llvm::Value* scNBreakStatement::code_generate(scContext &context) {
+    BasicBlock* block = context.getCurrentBreakToBlock();
+    assert(block != nullptr);
+    return context.builder.CreateBr(block);
 }

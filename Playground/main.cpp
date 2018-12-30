@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <fstream>
+#include <iostream>
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -40,6 +41,9 @@ std::unique_ptr<Module> buildModule()
 	Type* testtype = ArrayType::get(Builder.getInt32Ty(), 100)-> getPointerTo();
 	Value* arraypointer = Builder.CreateAlloca(testtype);
 	
+	Type* arraytype = ArrayType::get(Builder.getInt32Ty(), 100);
+	std::cout<<arraytype->getTypeID()<<std::endl;
+
 	Value *array = Builder.CreateAlloca(ArrayType::get(Builder.getInt32Ty(), 100), arraysize);
 	ArrayRef<Value*> ref = {ConstantInt::get(Type::getInt64Ty(TheContext), 0), ConstantInt::get(Type::getInt64Ty(TheContext), 100)};
 	ArrayRef<Value*> ref1 = {ConstantInt::get(Type::getInt64Ty(TheContext), 1)};
