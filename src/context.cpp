@@ -3,6 +3,7 @@
 //
 
 #include "context.h"
+// #include "grammar.hpp"
 
 scVariable::scVariable(Value* tvalue, scType* ttype): value(tvalue), type(ttype) {
 
@@ -23,37 +24,38 @@ scBlock::scBlock(BasicBlock* tblock): block(tblock), returnValue(nullptr)
 
 scBlock::~scBlock()
 {
-    delete block;
     for(auto it = VSymboltable.begin(); it != VSymboltable.end(); ++it)
         delete (*it).second;
     for(auto it = FSymboltable.begin(); it != FSymboltable.end(); ++it)
         delete (*it).second;
 }
 
-Value* scBlock::seekIdentifier(string& name)
+scVariable* scBlock::seekIdentifier(string& name)
 {
     msvi it = VSymboltable.find(name);
-    return it == VSymboltable.end()? nullptr: it->second->value;
+    return it == VSymboltable.end()? nullptr: it->second;
 }
 
-Function* scBlock::seekFunction(string& name)
+scFunction* scBlock::seekFunction(string& name)
 {
     msfi it = FSymboltable.find(name);
-    return it == FSymboltable.end()? nullptr: it->second->function;
+    return it == FSymboltable.end()? nullptr: it->second;
 }
 
-Value* scBlock::setIdentifier(string &name, Value *value, scType *sctype) {
+scVariable* scBlock::setIdentifier(string &name, Value *value, scType *sctype) {
     if(VSymboltable.find(name) != VSymboltable.end())
         return nullptr;
-    VSymboltable[name] = new scVariable(value, sctype);
-    return value;
+    scVariable* p = new scVariable(value, sctype);
+    VSymboltable[name] = p;
+    return p;
 }
 
-Function* scBlock::setFunction(string &name, Function *function, scType* ttype, vt& tvt) {
+scFunction* scBlock::setFunction(string &name, Function *function, scType* ttype, vt& tvt) {
     if(FSymboltable.find(name) != FSymboltable.end())
         return nullptr;
-    FSymboltable[name] = new scFunction(function, ttype, tvt);
-    return function;
+    scFunction* p = new scFunction(function, ttype, tvt);
+    FSymboltable[name] = p;
+    return p;
 }
 
 scContext::scContext(): builder(llvmContext), typeSystem(llvmContext) {
@@ -89,16 +91,16 @@ scBlock* scContext::getCurrentBlock() {
     return blocks.size()? blocks.back(): nullptr;
 }
 
-Function* scContext::setFunction(string &name, Function *function, scType *rtntype, vt &tvt) {
+scFunction* scContext::setFunction(string &name, Function *function, scType *rtntype, vt &tvt) {
     return blocks.back()->setFunction(name, function, rtntype, tvt);
 }
 
-Value* scContext::setIdentifier(string &name, Value *value, scType *type) {
+scVariable* scContext::setIdentifier(string &name, Value *value, scType *type) {
     return blocks.back()->setIdentifier(name, value, type);
 }
 
-Value* scContext::seekIdentifier(string &name) {
-    Value* rtn;
+scVariable* scContext::seekIdentifier(string &name) {
+    scVariable* rtn;
     for(auto it = blocks.rbegin(); it != blocks.rend(); ++it) {
         if((rtn = (*it)->seekIdentifier(name)) != nullptr)
             return rtn;
@@ -106,17 +108,13 @@ Value* scContext::seekIdentifier(string &name) {
     return nullptr;
 }
 
-Function* scContext::seekFunction(string &name) {
-    Function* rtn;
+scFunction* scContext::seekFunction(string &name) {
+    scFunction* rtn;
     for(auto it = blocks.rbegin(); it != blocks.rend(); ++it) {
         if((rtn = (*it)->seekFunction(name)) != nullptr)
             return rtn;
     }
-    return rtn;
-}
-
-Type* scContext::number2type(int number) {
-    return builder.getInt32Ty();
+    return nullptr;
 }
 
 void scBlock::setParentFunction(Function *func) {
@@ -125,4 +123,29 @@ void scBlock::setParentFunction(Function *func) {
 
 Function* scBlock::getParentFunction() {
     return parent_function;
+}
+
+llvm::BasicBlock* scContext::getCurrentBreakToBlock() {
+    return breakToBlocks.empty()? nullptr: breakToBlocks.back();
+}
+
+llvm::BasicBlock* scContext::getCurrentContinueToBlock() {
+    return continueToBlocks.empty()? nullptr: continueToBlocks.back();
+}
+
+void scContext::pushBreakToBlock(llvm::BasicBlock* basicblock) {
+    breakToBlocks.pub(basicblock);
+}
+
+void scContext::pushContinueToBlock(llvm::BasicBlock* basicblock) {
+    continueToBlocks.pub(basicblock);
+
+}
+
+void scContext::popBreakToBlock() {
+    breakToBlocks.pob();
+}
+
+void scContext::popContinueToBlock() {
+    continueToBlocks.pob();
 }

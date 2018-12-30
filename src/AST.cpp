@@ -4,6 +4,7 @@
 
 #include "global.h"
 #include "AST.hpp"
+#include "grammar.hpp"
 
 #include <llvm/IR/Value.h>
 #include <llvm/IR/LLVMContext.h>
@@ -24,15 +25,34 @@ using std::cout;
 using std::endl;
 using llvm::Value;
 
+<<<<<<< HEAD
 static Value* to_boolean(scContext& context, Value* rawVal)
 {
     if( ISTYPE(rawVal, Type::IntegerTyID) ){
         rawVal = context.builder.CreateIntCast(rawVal, Type::getInt1Ty(context.llvmContext), true);
         return context.builder.CreateICmpNE(rawVal, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
-    }else if( ISTYPE(rawVal, Type::DoubleTyID) ){
+    }
+    else if( ISTYPE(rawVal, Type::DoubleTyID) )
+    {
         return context.builder.CreateFCmpONE(rawVal, ConstantFP::get(context.llvmContext, APFloat(0.0)));
-    }else{
+    }else
+        {
         return rawVal;
+    }
+Type* scContext::number2type(int number) {
+    switch(number) {
+        case TYINT:
+            return builder.getInt32Ty();
+        case TYDOUBLE:
+            return builder.getDoubleTy();
+        case TYFLOAT:
+            return builder.getFloatTy();
+        case TYCHAR:
+            return builder.getInt8Ty();
+        case TYVOID:
+            return builder.getVoidTy();
+        default:
+            return nullptr;
     }
 }
 
@@ -88,6 +108,9 @@ void scNStatements::print_debug(int depth)
 {
     this->print_depth(depth);
     cout<<this->class_name<<endl;
+
+
+
     for(auto it = this->statement_list.begin(); it != this->statement_list.end(); it++)
     {
         try_to_print((shared_ptr<scNNode>)(*it), depth);
@@ -313,6 +336,8 @@ scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, int 
 }
 
 llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     bool isarray = false;
     int arraysize = 1;
     string varName;
@@ -326,15 +351,17 @@ llvm::Value* scNVariableDeclaration::code_generate(scContext& context) {
     else {
         allocaInst = context.builder.CreateAlloca(type);
     }
-    Value* rtnvalue = context.setIdentifier(varName, allocaInst, sctype);
+    scVariable* rtnvalue = context.setIdentifier(varName, allocaInst, sctype);
     if(rtnvalue == nullptr) {
-        logerr("duplicated variable name!");
+        logerr("Duplicated variable name!");
         exit(1);
     }
     return allocaInst;
 }
 
 llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     //get return type
     Function* seeked_func = context.seekFunction(dec_body->name);
     if(seeked_func!=nullptr) {
@@ -355,23 +382,25 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
         }
     }
     llvm::ArrayRef<Type*> param_llvm_types_ref(param_llvm_types);
-    llvm::FunctionType *func_type = llvm::FunctionType::get(context.builder.getInt32Ty(), param_llvm_types_ref, false);
-    llvm::Function *func = llvm::Function::Create(func_type, Function::ExternalLinkage, dec_body->name, context.llvmModule.get());
+    llvm::FunctionType *func_type = llvm::FunctionType::get(context.builder.getInt32Ty(), param_llvm_types_ref, true);
+    llvm::Function *func = llvm::Function::Create(func_type, llvm::GlobalValue::ExternalLinkage, dec_body->name.c_str(), context.llvmModule.get());
     context.setFunction(dec_body->name, func, return_sctype, param_sctypes);
     return func;
 }
 
 llvm::Value* scNFunctionCall::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     assert(this->expressions!=nullptr);
     Function* callee = context.seekFunction(this->f_name);
     if(callee == nullptr) {
         this->logerr("Callee is empty!");
         exit(1);
     }
-    if(callee->arg_size() != this->expressions->expression_list.size()) {
-        this->logerr("Argument number does not match!");
-        exit(1);
-    }
+    // if(callee->arg_size() != this->expressions->expression_list.size()) {
+    //     this->logerr("Argument number does not match!");
+    //     exit(1);
+    // }
     std::vector<llvm::Value*> argsv;
     for(auto it = this->expressions->expression_list.begin(); it != this->expressions->expression_list.end(); ++it) {
         llvm::Value* value = (*it)->code_generate(context);
@@ -386,39 +415,72 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
 }
 
 llvm::Value* scNStatements::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     llvm::Value* value;
     for(auto it = this->statement_list.begin(); it != this->statement_list.end(); ++it) {
         value = (*it)->code_generate(context);
+        cout <<"statement done"<<endl;
     }
     return value;
 }
 
 llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
+    cout<<"generating " << class_name << endl;
+
     llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
-    this->block->parent_function = func;
+    // this->block->parent_function = func;
+    llvm::BasicBlock* basicBlock = llvm::BasicBlock::Create(context.llvmContext, "entry", func, nullptr);
+    context.builder.SetInsertPoint(basicBlock);
+
+    context.pushBlock(basicBlock);
     this->block->code_generate(context);
+    // context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 0)));
+    context.popBlock();
+    
     return func;
 }
 
 llvm::Value* scNString::code_generate(scContext& context) {
-    return context.builder.CreateGlobalStringPtr(this->value);
+    cout<<"generating " << class_name << endl;
+    return context.builder.CreateGlobalStringPtr(this->value.substr(1,this->value.size()-2));
 }
 
 llvm::Value* scNBlock::code_generate(scContext &context) {
-    Function* par_func = context.getCurrentBlock()->getParentFunction();
+    cout<<"generating " << class_name << endl;
 
-    if(this->parent_function != nullptr)
-        par_func = this->parent_function;
+//    Function* par_func;
+//
+//    if(this->parent_function != nullptr)
+//        par_func = this->parent_function;
+//    else
+//        par_func = context.getCurrentBlock()->getParentFunction();
 
-    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
-    context.builder.SetInsertPoint(basicBlock);
-    context.pushBlock(basicBlock);
-    context.getCurrentBlock()->setParentFunction(par_func);
+//    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
+//    context.builder.SetInsertPoint(basicBlock);
+
+
+    context.pushBlock(context.getCurrentBlock()->block);
+    // context.getCurrentBlock()->setParentFunction(par_func);
     assert(statements != nullptr);
     statements->code_generate(context);
+    // cout<<"block gen done" << endl;
+    // context.builder.CreateRet(llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, 1)));
+
     context.popBlock();
-    return basicBlock;
+    return nullptr;
+}
+
+llvm::Value* scNReturnStatement::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    llvm::Value* value = this->expression->code_generate(context);
+    return context.builder.CreateRet(value);
+}
+
+llvm::Value* scNInt32Number::code_generate(scContext &context) {
+    return llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, value));
 }
 
 llvm::Value* scNIfStatement::code_generate(scContext& context){
@@ -494,38 +556,57 @@ llvm::Value* scNIfElseStatement::code_generate(scContext& context){
 llvm::Value* scNForStatement::code_generate(scContext& context){
     
     Function* parFunction = context.getCurrentBlock()->getParentFunction();
-    BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loopbody", parFunction);
-    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loopcont");
+    BasicBlock* condBB = BasicBlock::Create(context.llvmContext, "loop_condition");
+    BasicBlock* updateBB = BasicBlock::Create(context.llvmContext, "loop_update");
+    BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loop_body");
+    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loop_cont");
 
     if(this->init_expression)
     {
         this->init_expression->code_generate(context);
     }
 
+    parFunction->getBasicBlockList().push_back(condBB);
+    context.builder.SetInsertPoint(condBB);
+    context.pushBlock(condBB);
     Value* condVal = this->cond_expression->code_generate(context);
+    context.popBlock();
     if(!condVal)
     {
-        return nullptr;
+        this->logerr("invalid condition");
+        exit(1);
     }
     condVal = to_boolean(context, condVal);
     context.builder.CreateCondBr(condVal, loopBB, contBB);
+//    context.popBlock();
 
+    parFunction->getBasicBlockList().push_back(loopBB);
     context.SetInsertPoint(loopBB);
     context.pushBlock(loopBB);
+    context.breakToBlocks.push_back(contBB);
+    context.continueToBlocks.push_back(updateBB);
     this->statement->code_generate(context);
     context->popBlock();
 
+    parFunction->getBasicBlockList().push_back(updateBB);
+    context.builder.SetInsertPoint(updateBB);
+    context.pushBlock(updateBB);
     if(this->update_expression)
     {
         this->update_expression->code_generate(context);
     }
 
+//    context.builder.CreateBr(condBB);
+
     condVal = this->cond_expression->code_generate(context);
+    context.popBlock();
     condVal = to_boolean(context, condVal);
     context.builder.CreateCondBr(condVal, loopBB, contBB);
 
     parFunction->getBasicBlockList().push_back(contBB);
     context.builder.SetInsertPoint(contBB);
+    context.breakToBlocks.pop_back(contBB);
+    context.continueToBlocks.pop_back(updateBB);
     return nullptr;
 
 }
@@ -533,10 +614,15 @@ llvm::Value* scNForStatement::code_generate(scContext& context){
 llvm::Value* scNWhileStatement::code_generate(scContext& context){
 
     Function* parFunction = context.getCurrentBlock()->getParentFunction();
-    BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loopbody", parFunction);
-    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loopcont");
+    BasicBlock* condBB = BasicBlock::Create(context.llvmContext, "loop_condition");
+    BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loop_body");
+    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loop_cont");
 
+    parFunction->getBasicBlockList().push_back(condBB);
+    context.builder.SetInsertPoint(condBB);
+    context.pushBlock(condBB);
     Value* condVal = this->expression->code_generate(context);
+    context.popBlock();
     if(!condVal)
     {
         return nullptr;
@@ -546,6 +632,8 @@ llvm::Value* scNWhileStatement::code_generate(scContext& context){
 
     context.SetInsertPoint(loopBB);
     context.pushBlock(loopBB);
+    context.breakToBlocks.push_back(contBB);
+    context.continueToBlocks.push_back(condBB);
     this->statement->code_generate(context);
     context->popBlock();
 
@@ -555,6 +643,8 @@ llvm::Value* scNWhileStatement::code_generate(scContext& context){
 
     parFunction->getBasicBlockList().push_back(contBB);
     context.builder.SetInsertPoint(contBB);
+    context.breakToBlocks.pop_back(contBB);
+    context.continueToBlocks.pop_back(condBB);
     return nullptr;
 
 }
@@ -562,6 +652,7 @@ llvm::Value* scNWhileStatement::code_generate(scContext& context){
 llvm::Value* scNBinaryExpression::code_generate(scContext& context){
 
     this->is_assignable = false;
+    this->before_value = nullptr;
 
     Value* lVal = this->left_expression->code_generate(context);
     Value* rVal = this->right_expression->code_generate(context);
@@ -619,16 +710,6 @@ llvm::Value* scNBinaryExpression::code_generate(scContext& context){
             }
         }
     }
-
-    if(!this->left_expression->loaded)
-    {
-        lVal = context.builder.CreateLoad(lVal);
-    }
-    if(!this->right_expression->loaded)
-    {
-        rVal = context.builder.CreateLoad(rVal);
-    }
-    this->loaded = true;
 
     bool floatOp = false;
     if(lVal->getType()->getTypeID() == Type::DoubleTyID)
@@ -746,13 +827,16 @@ llvm::Value* scNBinaryExpression::code_generate(scContext& context){
 
 llvm::Value* scNUnaryExpression::code_generate(scContext &context) {
     this->is_assignable = false;
+    this->before_value = nullptr;
     Value* opVal = this->expression->code_generate(context);
-    if(!this->expression->loaded)
-    {
-        opVal = context.builder.CreateLoad(opVal);
-    }
-    this->loaded = true;
+
     this->type = this->expression->type;
+
+    if(opVal->getType()->getTypeID() == Type::PointerTyID)
+    {
+        this->logerr("unexpected operation num type");
+        exit(1);
+    }
 
     bool floatOp = false;
     if(opVal->getType()->getTypeID() == Type::DoubleTyID)

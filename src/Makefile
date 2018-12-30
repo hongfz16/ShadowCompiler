@@ -7,17 +7,17 @@ OBJS = grammar.o       \
 		typesystem.o   \
 		AST.o          \
 
-LLVMCONFIG = llvm-config
-CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++11
-LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/usr/local/lib -ljsoncpp
+LLVMCONFIG = llvm-config-7
+CPPFLAGS = `$(LLVMCONFIG) --cppflags` -std=c++11 -g
+LDFLAGS = `$(LLVMCONFIG) --ldflags` -lpthread -ldl -lz -lncurses -rdynamic -L/usr/local/lib 
 LIBS = `$(LLVMCONFIG) --libs`
 
 clean:
-	$(RM) -rf grammar.cpp grammar.hpp token.cpp main $(OBJS)
+	$(RM) -rf grammar.cpp grammar.hpp token.cpp main out test out.ll test.ll $(OBJS)
 
 main.cpp: AST.hpp context.h
 
-context.cpp: context.h
+context.cpp: context.h grammar.hpp
 
 typesystem.cpp: typesystem.h
 
@@ -38,4 +38,9 @@ main: $(OBJS)
 	g++ $(CPPFLAGS) -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
 
 run: main
-	./main < test.code
+	./main < test.c
+	clang out.ll -o out
+	./out
+
+compare: test.c
+	clang -S -emit-llvm test.c -o test.ll

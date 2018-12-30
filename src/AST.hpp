@@ -177,6 +177,7 @@ public:
     }
 
     Value* code_generate(scContext& context);
+//    Function* getParentFunction();
     void print_debug(int depth);
 };
 
@@ -276,7 +277,7 @@ public:
 public:
     scNReturnStatement(shared_ptr<scNExpression> ex)
     : expression(ex){class_name = "scNReturnStatement";}
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
     void print_debug(int depth);
 };
@@ -417,7 +418,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNDouble64Number: public scNNumber {

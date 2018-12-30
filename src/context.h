@@ -56,10 +56,10 @@ public:
     scBlock(BasicBlock*);
     ~scBlock();
 //    void setReturnValue();
-    Value* seekIdentifier(string&);
-    Function* seekFunction(string&);
-    Value* setIdentifier(string&, Value*, scType*);
-    Function* setFunction(string&, Function*, scType*, vt&);
+    scVariable* seekIdentifier(string&);
+    scFunction* seekFunction(string&);
+    scVariable* setIdentifier(string&, Value*, scType*);
+    scFunction* setFunction(string&, Function*, scType*, vt&);
     void setParentFunction(Function*);
     Function* getParentFunction();
 };
@@ -71,19 +71,29 @@ public:
     IRBuilder<> builder;
     unique_ptr<Module> llvmModule;
     TypeSystem typeSystem;
+    vector<llvm::BasicBlock*> breakToBlocks;
+    vector<llvm::BasicBlock*> continueToBlocks;
+
 public:
     scContext();
     ~scContext();
     scBlock* getLastBlock();
     void pushBlock(BasicBlock*);
     void popBlock();
-    Value* seekIdentifier(string&);
-    Function* seekFunction(string&);
-    Value* setIdentifier(string&, Value*, scType*);
-    Function* setFunction(string&, Function*, scType*, vt&);
+    scVariable* seekIdentifier(string&);
+    scFunction* seekFunction(string&);
+    scVariable* setIdentifier(string&, Value*, scType*);
+    scFunction* setFunction(string&, Function*, scType*, vt&);
     scBlock* getCurrentBlock();
     void setCurrentReturnValue(Value*, scType*);
     Type* number2type(int number);
+    llvm::BasicBlock* getCurrentBreakToBlock();
+    llvm::BasicBlock* getCurrentContinueToBlock();
+    void pushBreakToBlock(llvm::BasicBlock*);
+    void pushContinueToBlock(llvm::BasicBlock*);
+    void popBreakToBlock();
+    void popContinueToBlock();
+
 };
 
 #endif //SRC_CONTEXT_H
