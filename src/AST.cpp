@@ -421,8 +421,8 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     return basicBlock;
 }
 
-llvm::Value* scNIfStatement::code_generate(scContext &context){
-    Function* par_func = context.getCurrentBlock()->getParentFunction();
+llvm::Value* scNIfStatement::code_generate(scContext& context){
+    
     Value* condVal = this->expression->code_generate(context);
     if(!condVal)
     {
@@ -432,7 +432,7 @@ llvm::Value* scNIfStatement::code_generate(scContext &context){
     Function* parFunction = context.getCurrentBlock()->getParentFunction();
 
     BasicBlock* trueBB = BasicBlock::Create(context.llvmContext, "if_true", parFunction);
-    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "if_cont", parFunction);
+    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "if_cont");
 
     context.builder.CreateCondBr(condVal, trueBB, contBB);
 
@@ -441,11 +441,121 @@ llvm::Value* scNIfStatement::code_generate(scContext &context){
     this->statement->code_generate(context);
     context.popBlock();
 
+    trueBB = context.builder.GetInsertBlock();
     if(trueBB->getTerminator() == nullptr)
     {
         context.builder.CreateBr(mergeBB);
     }
 
+    parFunction->getBasicBlockList().push_back(contBB);
     context.builder.SetInsertPoint(contBB);
     return nullptr;
+}
+
+llvm::Value* scNIfElseStatement::code_generate(scContext& context){
+
+    Value* condVal = this->expression->code_generate(context);
+    if(!condVal)
+    {
+        return nullptr;
+    }
+    condVal = to_boolean(context, condVal);
+    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+
+    BasicBlock* trueBB = BasicBlock::Create(context.llvmContext, "if_true", parFunction);
+    BasicBlock* falseBB = BasicBlock::Create(context.llvmContext, "if_false");
+    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "if_cont");
+
+    context.builder.CreateCondBr(condVal, trueBB, falseBB);
+
+    context.builder.SetInsertPoint(trueBB);
+    context.pushBlock(trueBB);
+    this->if_statement->code_generate(context);
+    context.popBlock();
+
+    trueBB = context.builder.GetInsertBlock();
+    if(trueBB->getTerminator() == nullptr)
+    {
+        context.builder.CreateBr(mergeBB);
+    }
+
+    parFunction->getBasicBlockList().push_back(falseBB);
+    context.builder.SetInsertPoint(falseBB);
+    context.pushBlock(falseBB);     // different
+    this->else_statement->code_generate(context);
+    context.popBlock();
+    context.builder.CreateCr(contBB);
+
+    parFunction->getBasicBlockList().push_back(contBB);
+    context.builder.SetInsertPoint(contBB);
+    return nullptr;
+}
+
+llvm::Value* scNForStatement::code_generate(scContext& context){
+    
+    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loopbody", parFunction);
+    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loopcont");
+
+    if(this->init_expression)
+    {
+        this->init_expression->code_generate(context);
+    }
+
+    Value* condVal = this->cond_expression->code_generate(context);
+    if(!condVal)
+    {
+        return nullptr;
+    }
+    condVal = to_boolean(context, condVal);
+    context.builder.CreateCondBr(condVal, loopBB, contBB);
+
+    context.SetInsertPoint(loopBB);
+    context.pushBlock(loopBB);
+    this->statement->code_generate(context);
+    context->popBlock();
+
+    if(this->update_expression)
+    {
+        this->update_expression->code_generate(context);
+    }
+
+    condVal = this->cond_expression->code_generate(context);
+    condVal = to_boolean(condVal);
+    context.builder.CreateCondBr(condVal, loopBB, contBB);
+
+    parFunction->getBasicBlockList().push_back(contBB);
+    context.builder.SetInsertPoint(contBB);
+    return nullptr;
+
+}
+
+llvm::Value* scNWhileStatement::code_generate(scContext& context){
+
+    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loopbody", parFunction);
+    BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loopcont");
+
+    
+    Value* condVal = this->expression->code_generate(context);
+    if(!condVal)
+    {
+        return nullptr;
+    }
+    condVal = to_boolean(context, condVal);
+    context.builder.CreateCondBr(condVal, loopBB, contBB);
+
+    context.SetInsertPoint(loopBB);
+    context.pushBlock(loopBB);
+    this->statement->code_generate(context);
+    context->popBlock();
+
+    condVal = this->expression->code_generate(context);
+    condVal = to_boolean(context, condVal);
+    context.builder.CreateCondBr(condVal, loopBB, contBB);
+
+    parFunction->getBasicBlockList().push_back(contBB);
+    context.builder.SetInsertPoint(contBB);
+    return nullptr;
+
 }
