@@ -529,3 +529,7 @@ llvm::Value* scNAssignment::code_generate(scContext& context) {
 llvm::Value* scNArrayExpression::code_generate(scContext& context) {
     cout<<"generating "<<class_name<<endl;
 }
+
+llvm::Value* scNReferenceExpression::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+}
