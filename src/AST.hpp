@@ -251,9 +251,13 @@ public:
     int type;
     shared_ptr<scNDeclarationBody> dec_body;
     shared_ptr<scNParams> param_list;
+    bool is_definition;
 public:
     scNFunctionDeclaration(int type, shared_ptr<scNDeclarationBody> dec_body, shared_ptr<scNParams> param_list)
-    : type(type), dec_body(dec_body), param_list(param_list) {class_name = "scNFunctionDeclaration";}
+    : type(type), dec_body(dec_body), param_list(param_list) {
+        class_name = "scNFunctionDeclaration";
+        is_definition = false;
+    }
 
     Value* code_generate(scContext& context);
 
@@ -371,7 +375,7 @@ public:
 	
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context);
+	llvm::Value* code_generate(scContext& context) {}
 };
 
 class scNString: public scNExpression {

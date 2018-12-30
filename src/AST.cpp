@@ -361,6 +361,10 @@ llvm::Value* scNFunctionDeclaration::code_generate(scContext& context) {
     std::vector<scType*> param_sctypes;
     if(param_list!=nullptr) {
         for(auto it = param_list->param_list.begin(); it!=param_list->param_list.end(); ++it) {
+            // if(this->is_definition) {
+            //     cout<<"is_definition"<<endl;
+            //     (*it)->code_generate(context);
+            // }
             scType* param_sctype = getTypeFromDeclarationBody((*it)->dec_body, (*it)->type, context, isarray, arraysize, name);
             param_llvm_types.push_back(context.typeSystem.getllvmType(param_sctype));
             param_sctypes.push_back(param_sctype);
@@ -377,6 +381,7 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
 
     this->is_assignable = false;
+    this->before_value = nullptr;
 
     assert(this->expressions!=nullptr);
     scFunction* sccallee = context.seekFunction(this->f_name);
@@ -396,9 +401,6 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         if(value==nullptr) {
             this->logerr("Argument value can not be nullptr!");
             exit(1);
-        }
-        if((*it)->is_assignable) {
-            value = context.builder.CreateLoad(value);
         }
         argsv.push_back(value);
     }
@@ -420,13 +422,27 @@ llvm::Value* scNStatements::code_generate(scContext& context) {
 llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
 
+    // this->func_declaration->is_definition = true;
     llvm::Function* func = (llvm::Function*)this->func_declaration->code_generate(context);
     assert(func != nullptr);
+    
     llvm::BasicBlock* basicBlock = llvm::BasicBlock::Create(context.llvmContext, "entry", func, nullptr);
     context.builder.SetInsertPoint(basicBlock);
 
     context.pushBlock(basicBlock);
+    // scFunction* scfunc = context.seekFunction(this->func_declaration->dec_body->name);
+    // vector<scType*>& argssctype = scfunc->argTypes;
+    
+    auto origin_arg = this->func_declaration->param_list->param_list.begin();
+    for(auto &ir_arg_it: func->args()){
+        ir_arg_it.setName((*origin_arg)->dec_body->name);
+        (*origin_arg)->code_generate(context);
+        scVariable* scvar = context.seekIdentifier((*origin_arg)->dec_body->name);
+        context.builder.CreateStore(&ir_arg_it, scvar->value, false);
+        ++origin_arg;
+    }
     this->block->code_generate(context);
+
     context.popBlock();
     
     return func;
@@ -515,17 +531,11 @@ llvm::Value* scNAssignment::code_generate(scContext& context) {
         src_llvm_value = context.typeSystem.getCast(right_expression->type, 
             left_expression->type, src_llvm_value, context.getCurrentBlock()->block);
     }
-
     assert(src_llvm_value!=nullptr);
 
-    if(right_expression->is_assignable) {
-        src_llvm_value = context.builder.CreateLoad(src_llvm_value);
-    }
+    this->before_value = left_expression->before_value;
+    assert(this->before_value!=nullptr);
 
-    context.builder.CreateStore(src_llvm_value, dst_llvm_value);
+    context.builder.CreateStore(src_llvm_value, left_expression->before_value);
     return dst_llvm_value;
-}
-
-llvm::Value* scNArrayExpression::code_generate(scContext& context) {
-    cout<<"generating "<<class_name<<endl;
 }
