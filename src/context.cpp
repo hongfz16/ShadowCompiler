@@ -24,7 +24,6 @@ scBlock::scBlock(BasicBlock* tblock): block(tblock), returnValue(nullptr)
 
 scBlock::~scBlock()
 {
-//    delete block;
     for(auto it = VSymboltable.begin(); it != VSymboltable.end(); ++it)
         delete (*it).second;
     for(auto it = FSymboltable.begin(); it != FSymboltable.end(); ++it)
