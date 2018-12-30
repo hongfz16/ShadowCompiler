@@ -44,3 +44,8 @@ run: main test.c
 
 compare: test.c
 	clang -S -emit-llvm test.c -o test.ll
+
+target3: main test.c
+	./main < ../target/calc.c
+	clang out.ll -o out
+	./out

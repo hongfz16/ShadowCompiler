@@ -537,9 +537,10 @@ public:
     scNContinueStatement() {
         class_name = "scNContinueStatement";
     }
+    ~scNContinueStatement() {}
+    void print_debug(int depth);
 
     llvm::Value* code_generate(scContext& context);
-
 };
 
 class scNBreakStatement: public scNStatement {
@@ -547,9 +548,10 @@ public:
     scNBreakStatement() {
         class_name = "scNBreakStatement";
     }
+    ~scNBreakStatement() {}
+    void print_debug(int depth);
 
     llvm::Value* code_generate(scContext& context);
-
 };
 
 #endif //_AST_HPP_

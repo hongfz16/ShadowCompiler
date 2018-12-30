@@ -24,6 +24,8 @@
 "float"                 puts("TYFLOAT"); return TOKEN(TYFLOAT);
 "char"                  puts("TYCHAR"); return TOKEN(TYCHAR);
 "void"                  puts("TYVOID"); return TOKEN(TYVOID);
+"break"                 puts("TBREAK"); return TOKEN(TBREAK);
+"continue"              puts("TCONTINUE"); return TOKEN(TCONTINUE);
 "extern"                SAVE_TOKEN; puts("TEXTERN"); return TEXTERN;
 [a-zA-Z_][a-zA-Z0-9_]*	SAVE_TOKEN; puts("TIDENTIFIER"); return TIDENTIFIER;
 [0-9]+\.[0-9]*			SAVE_TOKEN; puts("TDOUBLE"); return TDOUBLE;

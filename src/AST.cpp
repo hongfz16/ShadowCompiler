@@ -34,14 +34,16 @@ using std::endl;
 static Value* to_boolean(scContext& context, Value* rawVal)
 {
     if( ISTYPE(rawVal, Type::IntegerTyID) ){
-        rawVal = context.builder.CreateIntCast(rawVal, Type::getInt1Ty(context.llvmContext), true);
-        return context.builder.CreateICmpNE(rawVal, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
+        // rawVal = context.builder.CreateIntCast(rawVal, Type::getInt1Ty(context.llvmContext), true);
+        // return context.builder.CreateICmpNE(rawVal, ConstantInt::get(Type::getInt1Ty(context.llvmContext), 0, true));
+        return context.builder.CreateICmpNE(rawVal, ConstantInt::get(rawVal->getType(), 0, true));
     }
     else if( ISTYPE(rawVal, Type::DoubleTyID) )
     {
         return context.builder.CreateFCmpONE(rawVal, ConstantFP::get(context.llvmContext, llvm::APFloat(0.0)));
-    }else
-        {
+    }
+    else
+    {
         return rawVal;
     }
 }
@@ -316,6 +318,16 @@ void scNDereferenceExpression::print_debug(int depth) {
     try_to_print((shared_ptr<scNNode>)expression, depth);
 }
 
+void scNContinueStatement::print_debug(int depth) {
+    this->print_depth(depth);
+    cout<<this->class_name<<endl;
+}
+
+void scNBreakStatement::print_debug(int depth) {
+    this->print_depth(depth);
+    cout<<this->class_name<<endl;
+}
+
 scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, int type, scContext& context, bool& isarray, int& arraysize, string& name) {
     // get info
     vector<shared_ptr<scNDeclarationBody> > lst;
@@ -539,6 +551,7 @@ llvm::Value* scNIdentifier::code_generate(scContext& context) {
 
     this->is_assignable = true;
     scVariable* scvar = context.seekIdentifier(this->name);
+    cout<<"seek "<<this->name<<endl;
     assert(scvar!=nullptr);
     this->type = scvar->type;
     this->before_value = scvar->value;
@@ -574,18 +587,20 @@ llvm::Value* scNAssignment::code_generate(scContext& context) {
     cout<<"left_expression type "<<left_expression->type->type->getTypeID()<<endl;
     cout<<"right_expression type "<<right_expression->type->type->getTypeID()<<endl;
     // if(right_expression->type != left_expression->type) {
+    if(src_llvm_value->getType() != dst_llvm_value->getType()) {
         src_llvm_value = context.typeSystem.getCast(right_expression->type, 
-            left_expression->type, src_llvm_value, context.getCurrentBlock()->block);
-        // cout<<left_expression->type->type<<endl;
+            left_expression->type, src_llvm_value, context.builder.GetInsertBlock());
+        cout<<left_expression->type->type<<endl;
         assert(src_llvm_value!=nullptr);
         cout<<"casted"<<endl;
-    // }
+    }
 
     this->before_value = left_expression->before_value;
     assert(this->before_value!=nullptr);
 
     context.builder.CreateStore(src_llvm_value, left_expression->before_value);
-    return dst_llvm_value;
+    // return dst_llvm_value;
+    return context.builder.CreateLoad(left_expression->before_value);
 }
 
 llvm::Value* scNArrayExpression::code_generate(scContext& context) {
@@ -594,14 +609,22 @@ llvm::Value* scNArrayExpression::code_generate(scContext& context) {
     this->is_assignable = true;
     Value* indexValue = index_expression->code_generate(context);
     Value* targetValue = target_expression->code_generate(context);
-    this->type = context.typeSystem.getscType(target_expression->type->type->getArrayElementType());
-
-//    assert(target_expression) check is pointer
-    // assert(targetValue->getType()->getTypeID() == Type::PointerTyID);
-    llvm::ArrayRef<Value*> ref = {llvm::ConstantInt::get(Type::getInt64Ty(context.llvmContext), 0),indexValue};
-    before_value = context.builder.CreateInBoundsGEP(targetValue, ref, "array-op");
-    
-    return context.builder.CreateLoad(before_value);
+    if(target_expression->type->type->getTypeID() == Type::ArrayTyID) {
+        cout<<">> in first block"<<endl;
+        this->type = context.typeSystem.getscType(target_expression->type->type->getArrayElementType());
+        llvm::ArrayRef<Value*> ref = {llvm::ConstantInt::get(Type::getInt64Ty(context.llvmContext), 0),indexValue};
+        before_value = context.builder.CreateInBoundsGEP(targetValue, ref, "array-op");        
+        return context.builder.CreateLoad(before_value);
+    }
+    else {
+        cout<<">> in second block"<<endl;
+        scNExpression* bexp = new scNBinaryExpression(target_expression, index_expression, TPLUS);
+        scNExpression* dereferenceexp = new scNDereferenceExpression(shared_ptr<scNExpression>(bexp));
+        Value* return_value = dereferenceexp->code_generate(context);
+        this->type = context.typeSystem.getscType(dereferenceexp->type->type);
+        before_value = dereferenceexp->before_value;
+        return return_value;
+    }    
 }
 
 llvm::Value* scNReferenceExpression::code_generate(scContext& context) {
@@ -649,7 +672,8 @@ llvm::Value* scNIfStatement::code_generate(scContext& context){
         return nullptr;
     }
     condVal = to_boolean(context, condVal);
-    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    // Function* parFunction = context.getCurrentBlock()->block->getParent();
+    Function* parFunction = context.builder.GetInsertBlock()->getParent();
 
     BasicBlock* trueBB = BasicBlock::Create(context.llvmContext, "if_true", parFunction);
     BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "if_cont");
@@ -681,7 +705,8 @@ llvm::Value* scNIfElseStatement::code_generate(scContext& context){
         return nullptr;
     }
     condVal = to_boolean(context, condVal);
-    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    // Function* parFunction = context.getCurrentBlock()->block->getParent();
+    Function* parFunction = context.builder.GetInsertBlock()->getParent();
 
     BasicBlock* trueBB = BasicBlock::Create(context.llvmContext, "if_true", parFunction);
     BasicBlock* falseBB = BasicBlock::Create(context.llvmContext, "if_false");
@@ -715,7 +740,9 @@ llvm::Value* scNIfElseStatement::code_generate(scContext& context){
 llvm::Value* scNForStatement::code_generate(scContext& context){
     cout<<"generating "<<class_name<<endl;
     
-    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    // Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    Function* parFunction = context.builder.GetInsertBlock()->getParent();
+
     BasicBlock* condBB = BasicBlock::Create(context.llvmContext, "loop_condition");
     BasicBlock* updateBB = BasicBlock::Create(context.llvmContext, "loop_update");
     BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loop_body");
@@ -726,6 +753,7 @@ llvm::Value* scNForStatement::code_generate(scContext& context){
         this->init_expression->code_generate(context);
     }
 
+    context.builder.CreateBr(condBB);
     parFunction->getBasicBlockList().push_back(condBB);
     context.builder.SetInsertPoint(condBB);
     context.pushBlock(condBB);
@@ -746,6 +774,7 @@ llvm::Value* scNForStatement::code_generate(scContext& context){
     context.breakToBlocks.push_back(contBB);
     context.continueToBlocks.push_back(updateBB);
     this->statement->code_generate(context);
+    context.builder.CreateBr(updateBB);
     context.popBlock();
 
     parFunction->getBasicBlockList().push_back(updateBB);
@@ -774,11 +803,14 @@ llvm::Value* scNForStatement::code_generate(scContext& context){
 llvm::Value* scNWhileStatement::code_generate(scContext& context){
     cout<<"generating "<<class_name<<endl;
 
-    Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    // Function* parFunction = context.getCurrentBlock()->getParentFunction();
+    Function* parFunction = context.builder.GetInsertBlock()->getParent();
+
     BasicBlock* condBB = BasicBlock::Create(context.llvmContext, "loop_condition");
     BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loop_body");
     BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loop_cont");
 
+    context.builder.CreateBr(condBB);
     parFunction->getBasicBlockList().push_back(condBB);
     context.builder.SetInsertPoint(condBB);
     context.pushBlock(condBB);
@@ -791,6 +823,7 @@ llvm::Value* scNWhileStatement::code_generate(scContext& context){
     condVal = to_boolean(context, condVal);
     context.builder.CreateCondBr(condVal, loopBB, contBB);
 
+    parFunction->getBasicBlockList().push_back(loopBB);
     context.builder.SetInsertPoint(loopBB);
     context.pushBlock(loopBB);
     context.breakToBlocks.push_back(contBB);

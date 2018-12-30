@@ -18,6 +18,8 @@ TypeSystem::TypeSystem(LLVMContext &tllvmContext): llvmContext(tllvmContext) {
     addCast(getscType(Type::getInt32Ty(tllvmContext)), getscType(Type::getFloatTy(tllvmContext)),llvm::CastInst::SIToFP);
     addCast(getscType(Type::getInt1Ty(tllvmContext)), getscType(Type::getInt32Ty(tllvmContext)),llvm::CastInst::SExt);
     addCast(getscType(Type::getInt32Ty(tllvmContext)), getscType(Type::getInt32Ty(tllvmContext)),llvm::CastInst::SExt);
+    addCast(getscType(Type::getInt32Ty(tllvmContext)), getscType(Type::getInt8Ty(tllvmContext)),llvm::CastInst::Trunc);
+    addCast(getscType(Type::getInt8Ty(tllvmContext)), getscType(Type::getInt32Ty(tllvmContext)),llvm::CastInst::SExt);
 }
 
 scType* TypeSystem::getscType(Type *type) {

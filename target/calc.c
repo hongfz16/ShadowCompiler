@@ -1,11 +1,14 @@
 extern int puts(char* c);
 extern int getchar();
-extern int putchar(int c);
+extern int putchar(char c);
+extern int printf(char* c);
+extern int scanf(char* c);
 
 int appendChar(char* s, int len, char c)
 {
-	s[len] = c;
-	s[len = len + 1] = '\0';
+	*(s+len) = c;
+	len = len + 1;
+	s[len] = '\0';
 	return len;
 }
 
@@ -20,33 +23,20 @@ int get_str(char* str)
 	return len;
 }
 
-void print_int(int d)
-{
-	char a[100];
-	int top ;
-	top = 0;
-	if(!d)
-	{
-		putchar('0');
-		return;
-	}
-	for(d = d; d; d = d / 10)
-		a[top = top + 1] = '0' + d % 10;
-	for(d = d; top; top = top - 1)
-		putchar(a[top]);
-	return;
-}
-
 int getResult(char* exp, int len)
 {
 	int result;
 	result=0;
 	len = appendChar(exp, len, '#');
-	char myStack[10086];
+	char myStack[1000];
+	char* pmyStack;
+	pmyStack = &myStack[0];
 	int top;
 	top = 0;
-	myStack[top = top+1] = '#';
-	char reversePolishExp[100086];
+	myStack[top = top + 1] = '#';
+	char xxreversePolishExp[1086];
+	char* reversePolishExp;
+	reversePolishExp = &xxreversePolishExp[0];
 	int reverseLen;
 	reverseLen = 0;
 	int i;
@@ -114,9 +104,9 @@ int getResult(char* exp, int len)
 		while(reversePolishExp[i]<='9' && reversePolishExp[i]>='0')
 		{
 			flag = 1;
-			char temp;
+			int temp;
 			temp = reversePolishExp[i];
-			num=num*10+(temp-'0');
+			num=num*10+(temp-48);
 			i = i + 1;
 		}
 		if(flag)
@@ -169,10 +159,12 @@ int main()
 {
 	char targetExp[10034];
 	int len;
-	len = get_str(targetExp);
+	scanf("%s", targetExp);
+	for(len=0;targetExp[len]!='\0';len=len+1){
+		len = len;
+	}
 	int result;
-	result = getResult(targetExp, len);
-	print_int(result);
-	putchar('\n');
+	result = getResult(&targetExp[0], len);
+	printf("%d\n",result);
 	return 0;
 }
