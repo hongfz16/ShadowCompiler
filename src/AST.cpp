@@ -440,3 +440,8 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     context.popBlock();
     return nullptr;
 }
+
+
+llvm::Value* scNInt32Number::code_generate(scContext &context) {
+    return llvm::ConstantInt::get(context.llvmContext, llvm::APInt(32, value));
+}
