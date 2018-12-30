@@ -476,7 +476,7 @@ llvm::Value* scNIfElseStatement::code_generate(scContext& context){
     trueBB = context.builder.GetInsertBlock();
     if(trueBB->getTerminator() == nullptr)
     {
-        context.builder.CreateBr(mergeBB);
+        context.builder.CreateBr(contBB);
     }
 
     parFunction->getBasicBlockList().push_back(falseBB);
@@ -484,7 +484,7 @@ llvm::Value* scNIfElseStatement::code_generate(scContext& context){
     context.pushBlock(falseBB);     // different
     this->else_statement->code_generate(context);
     context.popBlock();
-    context.builder.CreateCr(contBB);
+    context.builder.CreateBr(contBB);
 
     parFunction->getBasicBlockList().push_back(contBB);
     context.builder.SetInsertPoint(contBB);
@@ -521,7 +521,7 @@ llvm::Value* scNForStatement::code_generate(scContext& context){
     }
 
     condVal = this->cond_expression->code_generate(context);
-    condVal = to_boolean(condVal);
+    condVal = to_boolean(context, condVal);
     context.builder.CreateCondBr(condVal, loopBB, contBB);
 
     parFunction->getBasicBlockList().push_back(contBB);
