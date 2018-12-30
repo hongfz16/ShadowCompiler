@@ -429,11 +429,11 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     else
         par_func = context.getCurrentBlock()->getParentFunction();
 
-    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
-    context.builder.SetInsertPoint(basicBlock);
+//    BasicBlock* basicBlock = BasicBlock::Create(context.llvmContext, "entry", par_func, nullptr);
+//    context.builder.SetInsertPoint(basicBlock);
 
 
-    context.pushBlock(basicBlock);
+    context.pushBlock(context.getCurrentBlock()->block);
     context.getCurrentBlock()->setParentFunction(par_func);
     assert(statements != nullptr);
     statements->code_generate(context);
@@ -441,5 +441,5 @@ llvm::Value* scNBlock::code_generate(scContext &context) {
     cout<<"block gen done" << endl;
 
     context.popBlock();
-    return basicBlock;
+    return nullptr;
 }

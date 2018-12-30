@@ -3,6 +3,7 @@
 //
 
 #include "context.h"
+#include "grammar.hpp"
 
 scVariable::scVariable(Value* tvalue, scType* ttype): value(tvalue), type(ttype) {
 
@@ -23,7 +24,7 @@ scBlock::scBlock(BasicBlock* tblock): block(tblock), returnValue(nullptr)
 
 scBlock::~scBlock()
 {
-    delete block;
+//    delete block;
     for(auto it = VSymboltable.begin(); it != VSymboltable.end(); ++it)
         delete (*it).second;
     for(auto it = FSymboltable.begin(); it != FSymboltable.end(); ++it)
@@ -116,7 +117,21 @@ Function* scContext::seekFunction(string &name) {
 }
 
 Type* scContext::number2type(int number) {
-    return builder.getInt32Ty();
+//    return builder.getInt32Ty();
+    switch(number) {
+        case TYINT:
+            return builder.getInt32Ty();
+        case TYDOUBLE:
+            return builder.getDoubleTy();
+        case TYFLOAT:
+            return builder.getFloatTy();
+        case TYCHAR:
+            return builder.getInt8Ty();
+        case TYVOID:
+            return builder.getVoidTy();
+        default:
+            return nullptr;
+    }
 }
 
 void scBlock::setParentFunction(Function *func) {
