@@ -25,7 +25,7 @@ public:
     Type* getllvmType(scType*);
     void setTypeName(scType*, string&);
     void addCast(scType*, scType*, CastInst::CastOps);
-    CastInst::CastOps* getCast(scType*, scType*);
+    llvm::Value* getCast(scType*, scType*, Value*, llvm::BasicBlock*);
     string& type2str(scType*);
 };
 

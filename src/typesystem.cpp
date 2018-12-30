@@ -41,13 +41,14 @@ string& TypeSystem::type2str(scType* type) {
     return type->name;
 }
 
-CastInst::CastOps* TypeSystem::getCast(scType *src, scType *tar) {
+llvm::Value* TypeSystem::getCast(scType *src, scType *tar, Value* value, llvm::BasicBlock* block) {
     auto it = castTable.find(mp(src, tar));
     if(it == castTable.end()) {
         return nullptr;
     } else {
         CastInst::CastOps castop = it->second;
-        return &castop;
+//        return &castop;
+        return llvm::CastInst::Create(it->second, value, tar->type, "cast", block);
     }
     // return it == castTable.end()? nullptr: &(*it);
 }
