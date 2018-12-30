@@ -536,7 +536,6 @@ llvm::Value* scNWhileStatement::code_generate(scContext& context){
     BasicBlock* loopBB = BasicBlock::Create(context.llvmContext, "loopbody", parFunction);
     BasicBlock* contBB = BasicBlock::Create(context.llvmContext, "loopcont");
 
-    
     Value* condVal = this->expression->code_generate(context);
     if(!condVal)
     {
@@ -557,5 +556,238 @@ llvm::Value* scNWhileStatement::code_generate(scContext& context){
     parFunction->getBasicBlockList().push_back(contBB);
     context.builder.SetInsertPoint(contBB);
     return nullptr;
+
+}
+
+llvm::Value* scNBinaryExpression::code_generate(scContext& context){
+
+    this->is_assignable = false;
+
+    Value* lVal = this->left_expression->code_generate(context);
+    Value* rVal = this->right_expression->code_generate(context);
+
+    if(!lVal || !rVal)
+    {
+        this->logerr("lack operation num !");
+        exit(1);
+    }
+
+    // pointer operation
+    if(lVal->getType()->getTypeID() == Type::PointerTyID)
+    {
+        if(rVal->getType()->getTypeID() != Type::IntegerTyID)
+        {
+            this->logerr("wrong type for pointer operation");
+            exit(1);
+        }
+        else
+        {
+            switch (this->b_op)
+            {
+                case TPLUS:
+                case TMINUS:
+                    this->type = this->left_expression->type;
+                    ArrayRef<Value*> opRef= {rVal};
+                    return context.builder.CreateInBoundsGEP(lVal, opRef, "pointer add");
+                default:
+                    this->logerr("wrong type for pointer operation");
+                    exit(1);
+                    break;
+            }
+        }
+    }
+    if(rVal->getType()->getTypeID() == Type::PointerTyID)
+    {
+        if(lVal->getType()->getTypeID() != Type::IntegerTyID)
+        {
+            this->logerr("wrong type for pointer operation");
+            exit(1);
+        }
+        else
+        {
+            switch (this->b_op)
+            {
+                case TPLUS:
+                case TMINUS:
+                    this->type = this->right_expression->type;
+                    ArrayRef<Value*> opRef= {lVal};
+                    return context.builder.CreateInBoundsGEP(lVal, opRef, "pointer add");
+                default:
+                    this->logerr("wrong type for pointer operation");
+                    exit(1);
+
+            }
+        }
+    }
+
+    if(!this->left_expression->loaded)
+    {
+        lVal = context.builder.CreateLoad(lVal);
+    }
+    if(!this->right_expression->loaded)
+    {
+        rVal = context.builder.CreateLoad(rVal);
+    }
+    this->loaded = true;
+
+    bool floatOp = false;
+    if(lVal->getType()->getTypeID() == Type::DoubleTyID)
+    {
+        floatOp = true;
+//        this->type = this->left_expression->type;
+        if(rVal->getType()->getTypeID() != Type::DoubleTyID)
+        {
+            rVal = context.builder.CreateUIToFP(rVal, Type::getDoubleTy(context.llvmContext));
+        }
+    }
+    if(rVal->getType()->getTypeID() == Type::DoubleTyID)
+    {
+        floatOp = true;
+//        this->type = this->right_expression->type;
+        if(lVal->getType()->getTypeID() != Type::DoubleTyID)
+        {
+            lVal = context.builder.CreateUIToFP(lVal, Type::getDoubleTy(context.llvmContext));
+        }
+    }
+
+    if(floatOp)
+    {
+        this->type = context.typeSystem.getscType(context.builder.getDoubleTy());
+        switch (this->b_op)
+        {
+            case TCEQ:
+                return context.builder.CreateFCmpOEQ(lVal, rVal, "equal");
+            case TCNE:
+                return context.builder.CreateFCmpONE(lVal, rVal, "unequal");
+            case TCLT:
+                return context.builder.CreateFCmpOLT(lVal, rVal, "smaller");
+            case TCLE:
+                return context.builder.CreateFCmpOLE(lVal, rVal, "smaller or eq");
+            case TCGT:
+                return context.builder.CreateFCmpOGT(lVal, rVal, "greater");
+            case TCGE:
+                return context.builder.CreateFCmpOGE(lVal, rVal, "greater or eql");
+            case TPLUS:
+                return context.builder.CreateFAdd(lVal, rVal, "add")
+            case TMINUS:
+                return context.builder.CreateFSub(lVal, rVal, "sub")
+            case TMUL:
+                return context.builder.CreateFMul(lVal, rVal, "mul")
+            case TDIV:
+                return context.builder.CreateFDiv(lVal, rVal, "div")
+            case TANDAND:
+                lVal = to_boolean(context, lVal);
+                rVal = to_boolean(context, rVal);
+                this->type = context.typeSystem.getscType(context.builder.getInt32Ty());
+                return context.builder.CreateAnd(lVal, rVal, "div");
+            case TOROR:
+                lVal = to_boolean(context, lVal);
+                rVal = to_boolean(context, rVal);
+                this->type = context.typeSystem.getscType(context.builder.getInt32Ty());
+                return context.builder.CreateOr(lVal, rVal, "div");
+            default:
+                this->logerr("unexpected operator type in double op");
+                exit(1);
+        }
+    }
+    else
+    {
+        this->type = context.typeSystem.getscType(context.builder.getInt32Ty());
+        switch (this->b_op)
+        {
+            case TCEQ:
+                return context.builder.CreateCmpOEQ(lVal, rVal, "equal");
+            case TCNE:
+                return context.builder.CreateCmpONE(lVal, rVal, "unequal");
+            case TCLT:
+                return context.builder.CreateCmpOLT(lVal, rVal, "smaller");
+            case TCLE:
+                return context.builder.CreateCmpOLE(lVal, rVal, "smaller or eq");
+            case TCGT:
+                return context.builder.CreateCmpOGT(lVal, rVal, "greater");
+            case TCGE:
+                return context.builder.CreateCmpOGE(lVal, rVal, "greater or eql");
+            case TPLUS:
+                return context.builder.CreateAdd(lVal, rVal, "add")
+            case TMINUS:
+                return context.builder.CreateSub(lVal, rVal, "sub")
+            case TMUL:
+                return context.builder.CreateMul(lVal, rVal, "mul")
+            case TDIV:
+                return context.builder.CreateSDiv(lVal, rVal, "div")
+            case TANDAND:
+                lVal = to_boolean(context, lVal);
+                rVal = to_boolean(context, rVal);
+                return context.builder.CreateAnd(lVal, rVal, "div");
+            case TOROR:
+                lVal = to_boolean(context, lVal);
+                rVal = to_boolean(context, rVal);
+                return context.builder.CreateOr(lVal, rVal, "div");
+            case TAND:
+                return context.builder.CreateAnd(lVal, rVal, "and");
+            case TOR:
+                return context.builder.CreateOr(lVal, rVal, "or");
+            case TXOR:
+                return context.builder.CreateXor(lVal, rVal, "xor");
+            case TMOD:
+                return context.builder.CreateSRem(lVal, rVal, "mod");
+            case TSHIFTL:
+                return context.builder.CreateShl(lVal, rVal, "shift left");
+            case TSHIFLR:
+                return context.builder.CreateLShr(lVal, rVal, "shift right");
+            default:
+                this->logerr("unexpected operator type in int op");
+                exit(1);
+        }
+    }
+    this->logerr("unexpected operation error");
+    exit(1);
+}
+
+llvm::Value* scNUnaryExpression::code_generate(scContext &context) {
+    this->is_assignable = false;
+    Value* opVal = this->expression->code_generate(context);
+    if(!this->expression->loaded)
+    {
+        opVal = context.builder.CreateLoad(opVal);
+    }
+    this->loaded = true;
+    this->type = this->expression->type;
+
+    bool floatOp = false;
+    if(opVal->getType()->getTypeID() == Type::DoubleTyID)
+    {
+        floatOp = true;
+    }
+
+    if(floatOp)
+    {
+        switch (this->u_op)
+        {
+            case TMINUS:
+                return context.builder.CreateFNeg(opVal);
+            case TEXCLAMATION:
+                opVal = to_boolean(context, opVal);
+                this->type = context.typeSystem.getscType(context.builder.getInt32Ty());
+                return context.builder.CreateNot(opVal);
+            default:
+                this->logerr("unexpected operator type in double op");
+                exit(1);
+        }
+    }
+    else
+    {
+        switch (this->u_op)
+        {
+            case TMINUS:
+                return context.builder.CreateNeg(opVal);
+            case TEXCLAMATION:
+                opVal = to_boolean(context, opVal);
+                return context.builder.CreateNot(opVal);
+            default:
+                this->logerr("unexpected operator type in integer op");
+                exit(1);
+        }
+    }
 
 }
