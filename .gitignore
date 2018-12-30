@@ -34,6 +34,7 @@
 *.ll
 
 .DS_Store
+.vscode
 
 .idea
 cmake-build-debug
@@ -46,3 +47,5 @@ test
 grammar.cpp
 grammar.hpp
 token.cpp
+
+.vscode

@@ -193,9 +193,11 @@ public:
 
 public:
     scNIfStatement(shared_ptr<scNExpression> ex, shared_ptr<scNStatement> st)
-    : expression(ex), statement(st){}
+    : expression(ex), statement(st) {
+        class_name = "scNIfStatement";
+    }
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
     void print_debug(int depth);
 };
 
@@ -210,7 +212,7 @@ public:
     scNIfElseStatement(shared_ptr<scNExpression> ex, shared_ptr<scNStatement> i_st, shared_ptr<scNStatement> e_st)
     : expression(ex), if_statement(i_st), else_statement(e_st){class_name = "scNifElseStatement";}
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
     void print_debug(int depth);
 };
@@ -226,7 +228,7 @@ public:
     scNForStatement(shared_ptr<scNExpression> i_ex, shared_ptr<scNExpression> c_ex, shared_ptr<scNExpression> u_ex, shared_ptr<scNStatement> st)
     : init_expression(i_ex), cond_expression(c_ex), update_expression(u_ex), statement(st){ class_name = "scNForStatement"; }
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
     void print_debug(int depth);
 };
@@ -240,7 +242,7 @@ public:
     scNWhileStatement(shared_ptr<scNExpression> ex, shared_ptr<scNStatement> st)
     : expression(ex), statement(st){class_name = "scNWhileStatement";}
 
-    Value* code_generate(scContext& context){}
+    Value* code_generate(scContext& context);
 
     void print_debug(int depth);
 };
@@ -357,6 +359,7 @@ public:
 	
 	void print_debug(int depth);
 
+    //donot need to define this
 	llvm::Value* code_generate(scContext& context) {}
 };
 
@@ -480,7 +483,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNUnaryExpression: public scNExpression {
@@ -496,7 +499,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNReferenceExpression: public scNExpression {

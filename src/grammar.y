@@ -102,7 +102,8 @@
 %type <expressions> expressions
 %type <token> bop uop type
 
-
+%left TANDAND TOROR
+%left TCEQ TCNE TCLT TCLE TCGT TCGE
 %left TPLUS TMINUS
 %left TMUL TDIV TMOD
 
@@ -239,7 +240,24 @@ expressions : expression { $$ = new scNExpressions();
 										  $$ = $1; }
 		;
 
-binary_expression : expression bop expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+binary_expression : expression TCEQ expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TCNE expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TCLT expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TCLE expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TCGT expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TCGE expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TPLUS expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TMINUS expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TMUL expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TDIV expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TAND expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TOR expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TXOR expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TMOD expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TSHIFTR expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TSHIFTL expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TANDAND expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
+		| expression TOROR expression { $$ = new scNBinaryExpression(shared_ptr<scNExpression>($1), shared_ptr<scNExpression>($3), $2); }
 		;
 
 bop 	: TCEQ { $$ = $1; }
