@@ -99,7 +99,7 @@ public:
 class scNExpression: public scNStatement {
 public:
     bool is_assignable;
-    shared_ptr<scType> type;
+    scType* type;
 public:
     scNExpression(): is_assignable(false),
                      type(nullptr) {
@@ -370,7 +370,7 @@ public:
 	
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNString: public scNExpression {
@@ -454,7 +454,7 @@ public:
 
 	void print_debug(int depth);
 
-	llvm::Value* code_generate(scContext& context) {}
+	llvm::Value* code_generate(scContext& context);
 };
 
 class scNBinaryExpression: public scNExpression {

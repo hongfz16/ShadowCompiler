@@ -140,8 +140,8 @@ expression : number { $$ = $1; }
 		| TLPAREN expression TRPAREN { $$ = $2; }
 		| identifier { $$ = $1; }
 		| assignment { $$ = $1; }
-		| TSTRING { $$ = new scNString(*($1)); }
-		| TCHAR { $$ = new scNChar(*($1)); }
+		| TSTRING { $$ = new scNString(toRawString(*($1))); }
+		| TCHAR { $$ = new scNChar(toRawString(*($1))); }
 		;
 
 variable_decl : type decl_body { $$ = new scNVariableDeclaration($1, shared_ptr<scNDeclarationBody>($2));}

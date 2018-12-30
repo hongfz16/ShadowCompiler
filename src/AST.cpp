@@ -385,7 +385,7 @@ llvm::Value* scNFunctionCall::code_generate(scContext& context) {
         exit(1);
     }
     Function* callee = sccallee->function;
-    this->type = cscallee->retType;
+    this->type = sccallee->retType;
     // if(callee->arg_size() != this->expressions->expression_list.size()) {
     //     this->logerr("Argument number does not match!");
     //     exit(1);
@@ -432,7 +432,8 @@ llvm::Value* scNFunctionDefinition::code_generate(scContext& context) {
 llvm::Value* scNString::code_generate(scContext& context) {
     cout<<"generating " << class_name << endl;
     this->is_assignable = false;
-    this->type = context.typeSystem.getscType(context.builder.getInt8PtrTy());
+    llvm::Type* llvm_type = context.builder.getInt8PtrTy();
+    this->type = context.typeSystem.getscType(llvm_type);
     return context.builder.CreateGlobalStringPtr(this->value.substr(1,this->value.size()-2));
 }
 
@@ -485,5 +486,30 @@ llvm::Value* scNIdentifier::code_generate(scContext& context) {
     scVariable* scvar = context.seekIdentifier(this->name);
     assert(scvar!=nullptr);
     this->type = scvar->type;
-    return scvar->value;
+    return context.builder.CreateLoad(scvar->value);
+}
+
+llvm::Value* scNAssignment::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
+
+    if(!left_expression->is_assignable) {
+        this->logerr("Cannot assign value to a right value.");
+        exit(1);
+    }
+
+    this->is_assignable = true;
+    this->type = left_expression->type;
+
+    llvm::Value* src_llvm_value = right_expression->code_generate(context);
+    llvm::Value* dst_llvm_value = left_expression->code_generate(context);
+
+    src_llvm_value = context.typeSystem.getCast(right_expression->type, 
+        left_expression->type, src_llvm_value, context.getCurrentBlock()->block);
+
+    context.builder.CreateStore(src_llvm_value, dst_llvm_value);
+    return dst_llvm_value;
+}
+
+llvm::Value* scNArrayExpression::code_generate(scContext& context) {
+    cout<<"generating "<<class_name<<endl;
 }

@@ -1,4 +1,5 @@
 extern int puts(char* c);
+extern int putchar(char c);
 extern int printf(char* c);
 extern int scanf(char* c);
 
@@ -9,8 +10,10 @@ int haha() {
 
 int main()
 {
+	putchar('\t');
+	puts("hello zs");
 	int a;
-	printf("%d",a);
+	printf("%lf\n",1.23);
 	int *(b[2322][123]);
 	printf("%d", 1);
 	{
