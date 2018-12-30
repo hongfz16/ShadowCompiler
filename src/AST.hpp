@@ -67,6 +67,7 @@ public:
     virtual void print_debug(int depth) = 0;
     static void print_depth(int depth);
     virtual Value* code_generate(scContext& context) = 0;
+	void logerr(const string&);
 };
 
 class scNType : public scNNode
@@ -290,7 +291,7 @@ public:
     : type(type), dec_body(body) {class_name = "scNVariableDeclaration";}
 
     Value* code_generate(scContext& context);
-	scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize);
+	scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize, string& name);
 	void print_debug(int depth);
 };
 

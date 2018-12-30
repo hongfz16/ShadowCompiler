@@ -268,7 +268,7 @@ void scNDereferenceExpression::print_debug(int depth) {
     try_to_print((shared_ptr<scNNode>)expression, depth);
 }
 
-scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize)
+scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool& isarray, int& arraysize, string& name)
 {
     // get info
     vector<shared_ptr<scNDeclarationBody> > lst;
@@ -277,7 +277,7 @@ scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool
         lst.pub(ptr);
     auto it = lst.rbegin();
     Type* type = context.number2type(this->type);
-    string varName = (*it)->name;
+    name = (*it)->name;
 
     isarray = false;
     arraysize = 1;
@@ -296,7 +296,11 @@ scType* getTypeFromDeclarationBody(shared_ptr<scNDeclarationBody> head_ptr, bool
 }
 
 Value* scNVariableDeclaration::code_generate(scContext& context) {
-
+    bool isarray = false;
+    int arraysize = 1;
+    name varName;
+    scType* sctype = getTypeFromDeclarationBody(dec_body, isarray, arraysize, varName);
+    Type* type = context.typeSystem.getllvmType(sctype);
     //TODO: code gen
     Value* allocaInst = nullptr;
     if(isarray) {
@@ -305,4 +309,14 @@ Value* scNVariableDeclaration::code_generate(scContext& context) {
     else {
         allocaInst = context.builder.CreateAlloca(type);
     }
+    Value* rtnvalue = context.setIdentifier(varName, allocaInst, sctype);
+    if(rtnvalue == nullptr) {
+        logerr("duplicated variable name!");
+        exit(1);
+    }
+    return allocaInst;
+}
+
+void scNNode::logerr(const string &err_info) {
+    cout << err_info << endl;
 }
