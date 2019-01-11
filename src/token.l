@@ -5,6 +5,7 @@
 #include "grammar.hpp"
 #define SAVE_TOKEN yylval.string = new std::string(yytext)
 #define TOKEN(t) ( yylval.token = t)
+void mputs(char* s) {}
 %}
 
 %option noyywrap
@@ -13,55 +14,55 @@
 %%
 "#".*                   ;
 [ \t\r\n]				;
-"if"                    puts("TIF"); return TOKEN(TIF);
-"else"                  puts("TELSE"); return TOKEN(TELSE);
-"return"                puts("TRETURN"); return TOKEN(TRETURN);
-"for"                   puts("TFOR"); return TOKEN(TFOR);
-"while"                 puts("TWHILE"); return TOKEN(TWHILE);
-"struct"                puts("TSTRUCT"); return TOKEN(TSTRUCT);
-"int"                   puts("TYINT");  return TOKEN(TYINT);
-"double"                puts("TYDOUBLE"); return TOKEN(TYDOUBLE);
-"float"                 puts("TYFLOAT"); return TOKEN(TYFLOAT);
-"char"                  puts("TYCHAR"); return TOKEN(TYCHAR);
-"void"                  puts("TYVOID"); return TOKEN(TYVOID);
-"break"                 puts("TBREAK"); return TOKEN(TBREAK);
-"continue"              puts("TCONTINUE"); return TOKEN(TCONTINUE);
-"extern"                SAVE_TOKEN; puts("TEXTERN"); return TEXTERN;
-[a-zA-Z_][a-zA-Z0-9_]*	SAVE_TOKEN; puts("TIDENTIFIER"); return TIDENTIFIER;
-[0-9]+\.[0-9]*			SAVE_TOKEN; puts("TDOUBLE"); return TDOUBLE;
-[0-9]+  				SAVE_TOKEN; puts("TINTEGER"); return TINTEGER;
-\"(\\.|[^"])*\"         SAVE_TOKEN; puts("TSTRING"); return TSTRING;
-\'(\\.|[^'])\'          SAVE_TOKEN; puts("TCHAR"); return TCHAR;
-"="						puts("TEQUAL"); return TOKEN(TEQUAL);
-"=="					puts("TCEQ"); return TOKEN(TCEQ);
-"!="                    puts("TCNE"); return TOKEN(TCNE);
-"<"                     puts("TCLT"); return TOKEN(TCLT);
-"<="                    puts("TCLE"); return TOKEN(TCLE);
-">"                     puts("TCGT"); return TOKEN(TCGT);
-">="                    puts("TCGE"); return TOKEN(TCGE);
-"("                     puts("TLPAREN"); return TOKEN(TLPAREN);
-")"                     puts("TRPAREN"); return TOKEN(TRPAREN);
-"{"                     puts("TLBRACE"); return TOKEN(TLBRACE);
-"}"                     puts("TRBRACE"); return TOKEN(TRBRACE);
-"["                     puts("TLBRACKET"); return TOKEN(TLBRACKET);
-"]"                     puts("TRBRACKET"); return TOKEN(TRBRACKET);
-"."                     puts("TDOT"); return TOKEN(TDOT);
-","                     puts("TCOMMA"); return TOKEN(TCOMMA);
-"+"                     puts("TPLUS"); return TOKEN(TPLUS);
-"-"                     puts("TMINUS"); return TOKEN(TMINUS);
-"*"                     puts("TMUL"); return TOKEN(TMUL);
-"/"                     puts("TDIV"); return TOKEN(TDIV);
-"&"                     puts("TAND"); return TOKEN(TAND);
-"|"                     puts("TOR"); return TOKEN(TOR);
-"^"                     puts("TXOR"); return TOKEN(TXOR);
-"%"                     puts("TMOD"); return TOKEN(TMOD);
-">>"                    puts("TSHIFTR"); return TOKEN(TSHIFTR);
-"<<"                    puts("TSHIFTL"); return TOKEN(TSHIFTL);
-";"                     puts("TSEMICOLON"); return TOKEN(TSEMICOLON);
-"!"                     puts("TEXCLAMATION"); return TOKEN(TEXCLAMATION);
-"~"                     puts("TWAVY"); return TOKEN(TWAVY);
-"&&"                    puts("TANDAND"); return TOKEN(TANDAND);
-"||"                    puts("TOROR"); return TOKEN(TOROR);
+"if"                    mputs("TIF"); return TOKEN(TIF);
+"else"                  mputs("TELSE"); return TOKEN(TELSE);
+"return"                mputs("TRETURN"); return TOKEN(TRETURN);
+"for"                   mputs("TFOR"); return TOKEN(TFOR);
+"while"                 mputs("TWHILE"); return TOKEN(TWHILE);
+"struct"                mputs("TSTRUCT"); return TOKEN(TSTRUCT);
+"int"                   mputs("TYINT");  return TOKEN(TYINT);
+"double"                mputs("TYDOUBLE"); return TOKEN(TYDOUBLE);
+"float"                 mputs("TYFLOAT"); return TOKEN(TYFLOAT);
+"char"                  mputs("TYCHAR"); return TOKEN(TYCHAR);
+"void"                  mputs("TYVOID"); return TOKEN(TYVOID);
+"break"                 mputs("TBREAK"); return TOKEN(TBREAK);
+"continue"              mputs("TCONTINUE"); return TOKEN(TCONTINUE);
+"extern"                SAVE_TOKEN; mputs("TEXTERN"); return TEXTERN;
+[a-zA-Z_][a-zA-Z0-9_]*	SAVE_TOKEN; mputs("TIDENTIFIER"); return TIDENTIFIER;
+[0-9]+\.[0-9]*			SAVE_TOKEN; mputs("TDOUBLE"); return TDOUBLE;
+[0-9]+  				SAVE_TOKEN; mputs("TINTEGER"); return TINTEGER;
+\"(\\.|[^"])*\"         SAVE_TOKEN; mputs("TSTRING"); return TSTRING;
+\'(\\.|[^'])\'          SAVE_TOKEN; mputs("TCHAR"); return TCHAR;
+"="						mputs("TEQUAL"); return TOKEN(TEQUAL);
+"=="					mputs("TCEQ"); return TOKEN(TCEQ);
+"!="                    mputs("TCNE"); return TOKEN(TCNE);
+"<"                     mputs("TCLT"); return TOKEN(TCLT);
+"<="                    mputs("TCLE"); return TOKEN(TCLE);
+">"                     mputs("TCGT"); return TOKEN(TCGT);
+">="                    mputs("TCGE"); return TOKEN(TCGE);
+"("                     mputs("TLPAREN"); return TOKEN(TLPAREN);
+")"                     mputs("TRPAREN"); return TOKEN(TRPAREN);
+"{"                     mputs("TLBRACE"); return TOKEN(TLBRACE);
+"}"                     mputs("TRBRACE"); return TOKEN(TRBRACE);
+"["                     mputs("TLBRACKET"); return TOKEN(TLBRACKET);
+"]"                     mputs("TRBRACKET"); return TOKEN(TRBRACKET);
+"."                     mputs("TDOT"); return TOKEN(TDOT);
+","                     mputs("TCOMMA"); return TOKEN(TCOMMA);
+"+"                     mputs("TPLUS"); return TOKEN(TPLUS);
+"-"                     mputs("TMINUS"); return TOKEN(TMINUS);
+"*"                     mputs("TMUL"); return TOKEN(TMUL);
+"/"                     mputs("TDIV"); return TOKEN(TDIV);
+"&"                     mputs("TAND"); return TOKEN(TAND);
+"|"                     mputs("TOR"); return TOKEN(TOR);
+"^"                     mputs("TXOR"); return TOKEN(TXOR);
+"%"                     mputs("TMOD"); return TOKEN(TMOD);
+">>"                    mputs("TSHIFTR"); return TOKEN(TSHIFTR);
+"<<"                    mputs("TSHIFTL"); return TOKEN(TSHIFTL);
+";"                     mputs("TSEMICOLON"); return TOKEN(TSEMICOLON);
+"!"                     mputs("TEXCLAMATION"); return TOKEN(TEXCLAMATION);
+"~"                     mputs("TWAVY"); return TOKEN(TWAVY);
+"&&"                    mputs("TANDAND"); return TOKEN(TANDAND);
+"||"                    mputs("TOROR"); return TOKEN(TOROR);
 .						printf("Unknown token:%s\n", yytext); yyterminate();
 
 %%

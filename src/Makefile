@@ -45,7 +45,17 @@ run: main test.c
 compare: test.c
 	clang -S -emit-llvm test.c -o test.ll
 
-target3: main test.c
+target_calc: main ../target/calc.c
 	./main < ../target/calc.c
+	clang out.ll -o out
+	./out
+
+target_kmp: main ../target/kmp.c
+	./main < ../target/kmp.c
+	clang out.ll -o out
+	./out
+
+target_p: main ../target/palindrome.c
+	./main < ../target/palindrome.c
 	clang out.ll -o out
 	./out

@@ -32,7 +32,7 @@ int main() {
 	yyparse();
 	cout<<"Finish parsing"<<endl;
 
-	TopBlock->print_debug(0);
+	// TopBlock->print_debug(0);
 	
 	scContext context;
 	std::vector<Type*> sysArgs;
